@@ -1,221 +1,233 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chiikawa 正字大考驗</title>
+  <title>吉伊卡哇正字討伐大冒險</title>
+  <!-- 載入慶祝彩帶效果套件 -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
-    }
-    body {
-      background-color: #fce4ec;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-    .game-card {
-      background: #ffffff;
-      border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 500px;
-      padding: 25px;
-      text-align: center;
-      border: 4px solid #f8bbd0;
-    }
-    .header-images {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      margin-bottom: 15px;
-    }
-    .character-img {
-      width: 90px;
-      height: 90px;
-      object-fit: contain;
-    }
-    .status-bar {
-      font-size: 1.1rem;
-      color: #880e4f;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-    .question-box {
-      font-size: 1.3rem;
-      color: #333;
-      margin-bottom: 20px;
-      background: #fff8e1;
-      padding: 15px;
-      border-radius: 12px;
-      border: 2px dashed #ffe082;
-    }
-    .options-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .opt-btn {
-      background-color: #e3f2fd;
-      border: 2px solid #90caf9;
-      color: #0d47a1;
-      padding: 12px;
-      border-radius: 10px;
-      font-size: 1.1rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .opt-btn:hover {
-      background-color: #bbdefb;
-    }
-    .result-container {
-      display: none;
-    }
-    .cert-image {
-      width: 100%;
-      max-width: 380px;
-      height: auto;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      margin: 15px 0;
-    }
-    .action-btn {
-      background-color: #f48fb1;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      font-size: 1.1rem;
-      border-radius: 25px;
-      cursor: pointer;
-      font-weight: bold;
-      margin-top: 10px;
-      transition: background 0.2s;
-    }
-    .action-btn:hover {
-      background-color: #ec407a;
-    }
+    * { box-sizing: border-box; font-family: "Microsoft JhengHei", Arial, sans-serif; }
+    body { background: #fff5f7; text-align: center; padding: 20px; margin: 0; }
+    .card { background: white; max-width: 500px; margin: 0 auto; padding: 25px; border-radius: 20px; box-shadow: 0 8px 20px rgba(255, 182, 193, 0.3); border: 3px solid #ffcdd2; }
+    
+    /* 玩家輸入區 */
+    .input-group { margin: 20px 0; }
+    .input-group input { padding: 12px; font-size: 16px; border: 2px solid #ff9ff3; border-radius: 8px; width: 80%; text-align: center; outline: none; }
+    
+    /* 血條與計分板 */
+    .status-container { display: flex; justify-content: space-between; align-items: center; background: #ffeaa7; padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; font-weight: bold; }
+    .hp-bar-bg { width: 50%; background: #dfe6e9; border-radius: 10px; height: 18px; overflow: hidden; }
+    .hp-bar-fill { width: 100%; height: 100%; background: #ff7675; transition: width 0.3s; }
+    
+    /* 遊戲題目與按鈕 */
+    .btn { display: block; width: 90%; margin: 12px auto; padding: 14px; font-size: 18px; font-weight: bold; border: 2px solid #ff9ff3; border-radius: 12px; background: white; color: #0984e3; cursor: pointer; transition: 0.2s; }
+    .btn:hover { background: #ff9ff3; color: white; transform: scale(1.02); }
+    
+    /* 彈窗樣式 */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 999; }
+    .modal-content { background: white; padding: 25px; border-radius: 16px; max-width: 400px; text-align: center; }
+    .modal img { max-width: 260px; height: auto; border-radius: 12px; margin: 15px 0; }
+    .close-btn { padding: 10px 24px; font-size: 18px; background: #ff6b81; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    
+    /* 結算證書圖片容器 */
+    .cert-img-container { width: 100%; margin: 15px 0; }
+    .cert-img-container img { width: 100%; max-width: 350px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    .ai-box { background: #e8f8f5; border: 2px dashed #1abc9c; padding: 12px; border-radius: 10px; color: #16a085; font-size: 15px; text-align: left; margin-top: 15px; }
   </style>
 </head>
 <body>
 
-<div class="game-card">
-  <!-- 頂部 Chiikawa 與 小八 圖片 -->
-  <div class="header-images">
-    <img id="chiikawa-img" class="character-img" src="https://i.postimg.cc/15L6KgrW/Correct-jpg.jpg" alt="Chiikawa">
-    <img id="hachiware-img" class="character-img" src="https://i.postimg.cc/sDtSJB48/wrong-jpg.jpg" alt="小八">
+<!-- 步驟一：輸入學號/姓名 -->
+<div id="start-card" class="card">
+  <h1 style="color: #ff6b81;">⚔️ 吉伊卡哇正字討伐戰 ⚔️</h1>
+  <p style="color: #636E72;">請輸入你的姓名或學號以開始進行挑戰：</p>
+  <div class="input-group">
+    <input type="text" id="student-name" placeholder="例如：張小明 / A1100123" required>
   </div>
+  <button class="btn" style="background: #ff6b81; color: white;" onclick="startGame()">進入討伐戰場</button>
+</div>
 
-  <!-- 遊戲進行區域 -->
-  <div id="quiz-area">
-    <div class="status-bar">
-      第 <span id="current-q">1</span> / <span id="total-q">5</span> 題 | 得分：<span id="score">0</span>
+<!-- 步驟二：遊戲核心介面 -->
+<div id="game-card" class="card" style="display: none;">
+  <div class="status-container">
+    <div>分數：<span id="score" style="color: #d63031; font-size: 20px;">50</span> 分</div>
+    <div style="width: 50%;">
+      <div style="font-size: 12px; margin-bottom: 2px;">錯字怪獸 HP</div>
+      <div class="hp-bar-bg"><div id="hp-fill" class="hp-bar-fill"></div></div>
     </div>
-    <div class="question-box" id="question-text">題目載入中...</div>
-    <div class="options-grid" id="options-container"></div>
   </div>
+  
+  <div id="quiz-container">
+    <h2 id="question-text" style="color: #2d3436; font-size: 20px;">題目載入中...</h2>
+    <div id="options"></div>
+  </div>
+</div>
 
-  <!-- 結算區域 -->
-  <div id="result-area" class="result-container">
-    <h2 id="result-title">測驗結束！</h2>
-    <p id="final-score-text" style="font-size: 1.2rem; margin: 10px 0;"></p>
+<!-- 答對 / 答錯 回饋彈窗 -->
+<div id="feedback-modal" class="modal">
+  <div class="modal-content">
+    <h2 id="feedback-title"></h2>
+    <img id="feedback-img" src="" alt="提示圖片">
+    <br>
+    <button class="close-btn" onclick="closeModal()">下一題</button>
+  </div>
+</div>
+
+<!-- 步驟三：通關結算畫面 (100分解鎖資格證) -->
+<div id="cert-modal" class="modal">
+  <div class="modal-content" style="border: 4px solid #ffd700; background: #fffdf0; max-width: 450px;">
+    <h1 style="color: #d63031; font-size: 26px; margin-bottom: 5px;">🎉 討伐成功！ 🎉</h1>
     
-    <!-- 100 分專屬：一級正字達人資格證圖片 -->
-    <div id="certificate-wrapper" style="display: none;">
-      <img id="cert-img" class="cert-image" src="https://i.postimg.cc/X7TFgZkt/final-jpg.jpg" alt="一級正字達人資格證">
+    <!-- 一級正字達人資格證圖片區 -->
+    <div class="cert-img-container">
+      <img id="cert-img" src="" alt="一級正字達人資格證">
     </div>
 
-    <button class="action-btn" onclick="restartGame()">重新挑戰</button>
+    <!-- AI 動態診斷報告 -->
+    <div class="ai-box">
+      <strong>🤖 小八 AI 診斷評語：</strong><br>
+      <span id="ai-feedback-text">正在分析答對率與弱點...</span>
+    </div>
+
+    <button class="close-btn" style="background: #00b894; margin-top: 20px;" onclick="location.reload()">重新挑戰</button>
   </div>
 </div>
 
 <script>
-  // 題目資料庫（範例 5 題，每題 20 分，滿分 100 分）
-  const quizData = [
-    { question: "請問下列何者為正確的文字？", options: ["再接再厲", "再接再勵"], answer: "再接再厲" },
-    { question: "請問下列何者為正確的文字？", options: ["按部就班", "按步就班"], answer: "按部就班" },
-    { question: "請問下列何者為正確的文字？", options: ["水龍頭", "水龍頭"], answer: "水龍頭" },
-    { question: "請問下列何者為正確的文字？", options: ["名信片", "明信片"], answer: "明信片" },
-    { question: "請問下列何者為正確的文字？", options: ["抑揚頓挫", "抑揚頓錯"], answer: "抑揚頓挫" }
+  // 1. 圖片路徑設定（請將此處替換為你實際的圖片檔案名稱或直接連結）
+  const CHIIKAWA_IMG = "https://i.postimg.cc/15L6KgrW/Correct-jpg.jpg";
+  const HACHIWARE_IMG = "https://i.postimg.cc/sDtSJB48/wrong-jpg.jpg";
+  const CERTIFICATE_IMG = "https://i.postimg.cc/X7TFgZkt/final-jpg.jpg";
+
+  // 2. Google Apps Script 部署 URL (用於傳送成績至試算表後台)
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbwKAAfRohWEI2R1RGMrJjcAHUqGc7vRcYrUn3-Xgc6UyoYQUGPhIEM6M0KTxCEC8ahCEw/exec";
+
+  // 遊戲狀態與題庫 (附帶 AI 錯誤類型標籤 errorType)
+  let studentName = "";
+  let score = 50;
+  let monsterHP = 100;
+  let currentQ = 0;
+  let errorStats = { "形近字混淆": 0, "音近字混淆": 0, "成語誤用": 0, "部首誤用": 0 };
+
+  const questions = [
+    { q: "請選出正確的正字：", options: ["澈底", "徹底"], ans: 1, errorType: "形近字混淆" },
+    { q: "請選出正確的正字：", options: ["倒霉", "倒黴"], ans: 1, errorType: "音近字混淆" },
+    { q: "請選出正確的正字：", options: ["名信片", "明信片"], ans: 1, errorType: "形近字混淆" },
+    { q: "請選出正確的正字：", options: ["再接再厲", "再接再勵"], ans: 0, errorType: "音近字混淆" },
+    { q: "請選出正確的正字：", options: ["按裝", "安裝"], ans: 1, errorType: "音近字混淆" },
+    { q: "請選出正確的正字：", options: ["水蒸氣", "水蒸汽"], ans: 0, errorType: "部首混淆" },
+    { q: "請選出正確的正字：", options: ["前仆後繼", "前撲後繼"], ans: 0, errorType: "音近字混淆" },
+    { q: "請選出正確的正字：", options: ["濫竽充數", "濫芋充數"], ans: 0, errorType: "部首混淆" },
+    { q: "請選出正確的正字：", options: ["身分證", "身份證"], ans: 0, errorType: "音近字混淆" },
+    { q: "請選出正確的正字：", options: ["美輪美奐", "美輪美美"], ans: 0, errorType: "形近字混淆" }
   ];
 
-  let currentQuestionIndex = 0;
-  let score = 0;
-
-  const quizArea = document.getElementById("quiz-area");
-  const resultArea = document.getElementById("result-area");
-  const questionText = document.getElementById("question-text");
-  const optionsContainer = document.getElementById("options-container");
-  const currentQEl = document.getElementById("current-q");
-  const totalQEl = document.getElementById("total-q");
-  const scoreEl = document.getElementById("score");
-  const finalScoreText = document.getElementById("final-score-text");
-  const certWrapper = document.getElementById("certificate-wrapper");
-
-  function loadQuestion() {
-    const currentQuiz = quizData[currentQuestionIndex];
-    currentQEl.innerText = currentQuestionIndex + 1;
-    totalQEl.innerText = quizData.length;
-    scoreEl.innerText = score;
-    questionText.innerText = currentQuiz.question;
-    optionsContainer.innerHTML = "";
-
-    currentQuiz.options.forEach(option => {
-      const btn = document.createElement("button");
-      btn.className = "opt-btn";
-      btn.innerText = option;
-      btn.onclick = () => selectOption(option);
-      optionsContainer.appendChild(btn);
-    });
-  }
-
-  function selectOption(selectedOption) {
-    const currentQuiz = quizData[currentQuestionIndex];
-    const pointsPerQuestion = 100 / quizData.length;
-
-    if (selectedOption === currentQuiz.answer) {
-      score += pointsPerQuestion;
+  function startGame() {
+    const input = document.getElementById("student-name").value.trim();
+    if (!input) {
+      alert("請輸入姓名或學號喔！");
+      return;
     }
-
-    currentQuestionIndex++;
-
-    if (currentQuestionIndex < quizData.length) {
-      loadQuestion();
-    } else {
-      showResults();
-    }
-  }
-
-  function showResults() {
-    quizArea.style.display = "none";
-    resultArea.style.display = "block";
-    finalScoreText.innerText = `你的最終得分為：${score} 分`;
-
-    // 達到 100 分時顯示資格證圖片
-    if (score === 100) {
-      certWrapper.style.display = "block";
-    } else {
-      certWrapper.style.display = "none";
-    }
-  }
-
-  function restartGame() {
-    currentQuestionIndex = 0;
-    score = 0;
-    resultArea.style.display = "none";
-    quizArea.style.display = "block";
+    studentName = input;
+    document.getElementById("start-card").style.display = "none";
+    document.getElementById("game-card").style.display = "block";
     loadQuestion();
   }
 
-  // 初始化遊戲
-  loadQuestion();
-</script>
+  function loadQuestion() {
+    const q = questions[currentQ % questions.length];
+    document.getElementById("question-text").innerText = q.q;
+    const optDiv = document.getElementById("options");
+    optDiv.innerHTML = "";
+    
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.innerText = opt;
+      btn.onclick = () => checkAnswer(idx);
+      optDiv.appendChild(btn);
+    });
+  }
 
+  function checkAnswer(selectedIdx) {
+    const q = questions[currentQ % questions.length];
+    const isCorrect = selectedIdx === q.ans;
+    const modal = document.getElementById("feedback-modal");
+    const title = document.getElementById("feedback-title");
+    const img = document.getElementById("feedback-img");
+
+    if (isCorrect) {
+      score += 5;
+      monsterHP = Math.max(0, monsterHP - 10);
+      title.innerText = "答對了！怪獸 HP -10 ⚔️ (+5分)";
+      title.style.color = "#00b894";
+      img.src = CHIIKAWA_IMG;
+    } else {
+      score -= 5;
+      errorStats[q.errorType]++; // 紀錄 AI 錯誤類型
+      title.innerText = "答錯了！受到反擊 😭 (-5分)";
+      title.style.color = "#d63031";
+      img.src = HACHIWARE_IMG;
+      alert(`答錯囉！這題屬於【${q.errorType}】，加油！`);
+    }
+
+    // 更新介面
+    document.getElementById("score").innerText = score;
+    document.getElementById("hp-fill").style.width = monsterHP + "%";
+
+    // 判斷是否達到 100 分通關
+    if (score >= 100) {
+      endGame();
+    } else {
+      modal.style.display = "flex";
+    }
+  }
+
+  function closeModal() {
+    document.getElementById("feedback-modal").style.display = "none";
+    currentQ++;
+    loadQuestion();
+  }
+
+  function endGame() {
+    // 1. 找出學生錯最多的類型 (AI 診斷)
+    let mainError = "無（全對，正字大師！）";
+    let maxCount = 0;
+    for (let type in errorStats) {
+      if (errorStats[type] > maxCount) {
+        maxCount = errorStats[type];
+        mainError = type;
+      }
+    }
+
+    // 2. 生成小八評語與設定資格證圖片
+    document.getElementById("cert-img").src = CERTIFICATE_IMG;
+    let aiText = `挑戰者 ${studentName} 成功獲得 100 分！`;
+    if (maxCount > 0) {
+      aiText += `<br>發現你在<b>【${mainError}】</b>類型較容易掉入陷阱，建議平時可以多注意部首與成語典故喔！`;
+    } else {
+      aiText += `<br>太厲害了！你的繁體正字觀念非常清晰，完全沒有難倒你！`;
+    }
+    document.getElementById("ai-feedback-text").innerHTML = aiText;
+
+    // 3. 彈出資格證視窗與彩帶特效
+    document.getElementById("cert-modal").style.display = "flex";
+    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+
+    // 4. 將數據自動發送至 Google 試算表後台
+    if (GAS_URL && !GAS_URL.includes("貼上你的")) {
+      fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          name: studentName,
+          score: score,
+          accuracy: "100%",
+          mainError: mainError
+        })
+      }).catch(err => console.log("數據傳送錯誤：", err));
+    }
+  }
+</script>
 </body>
 </html>
