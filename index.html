@@ -137,18 +137,18 @@
   let currentQ = 0;
   let totalAnswered = 0; // 紀錄總答題次數
   let correctCount = 0;  // 紀錄答對次數
-  let errorStats = { "形近字混淆": 0, "音近字混淆": 0, "部首混淆": 0 };
+  let errorStats = { "形近字混淆": 0, "音近字混淆": 0, "形音近混淆": 0 };
 
   const questions = [
-    { q: "請選出正確的正字：", options: ["澈底", "徹底"], ans: 1, errorType: "形近字混淆" },
+    { q: "請選出正確的正字：", options: ["澈底", "徹底"], ans: 1, errorType: "形音近混淆" },
     { q: "請選出正確的正字：", options: ["倒霉", "倒黴"], ans: 0, errorType: "音近字混淆" },
-    { q: "請選出正確的正字：", options: ["名信片", "明信片"], ans: 1, errorType: "形近字混淆" },
-    { q: "請選出正確的正字：", options: ["再接再厲", "再接再勵"], ans: 0, errorType: "音近字混淆" },
-    { q: "請選出正確的正字：", options: ["按裝", "安裝"], ans: 1, errorType: "音近字混淆" },
-    { q: "請選出正確的正字：", options: ["水蒸氣", "水蒸汽"], ans: 0, errorType: "部首混淆" },
+    { q: "請選出正確的正字：", options: ["名信片", "明信片"], ans: 1, errorType: "音近字混淆" },
+    { q: "請選出正確的正字：", options: ["再接再厲", "再接再勵"], ans: 0, errorType: "形音近混淆" },
+    { q: "請選出正確的正字：", options: ["按裝", "安裝"], ans: 1, errorType: "形音近混淆" },
+    { q: "請選出正確的正字：", options: ["水蒸氣", "水蒸汽"], ans: 0, errorType: "形音近混淆" },
     { q: "請選出正確的正字：", options: ["前仆後繼", "前撲後繼"], ans: 0, errorType: "音近字混淆" },
-    { q: "請選出正確的正字：", options: ["濫竽充數", "濫芋充數"], ans: 0, errorType: "部首混淆" },
-    { q: "請選出正確的正字：", options: ["身分證", "身份證"], ans: 0, errorType: "音近字混淆" },
+    { q: "請選出正確的正字：", options: ["濫竽充數", "濫芋充數"], ans: 0, errorType: "形近字混淆" },
+    { q: "請選出正確的正字：", options: ["身分證", "身份證"], ans: 0, errorType: "形音近混淆" },
     { q: "請選出正確的正字：", options: ["美輪美奐", "美輪美美"], ans: 0, errorType: "形近字混淆" }
   ];
 
