@@ -15,6 +15,11 @@
     .input-group { margin: 20px 0; }
     .input-group input { padding: 12px; font-size: 16px; border: 2px solid #ff9ff3; border-radius: 8px; width: 80%; text-align: center; outline: none; }
     
+    /* 玩法說明樣式 (專為初小學生設計) */
+    .rule-box { background: #fffdf0; border: 2px dashed #ffeaa7; border-radius: 12px; padding: 15px; text-align: left; margin: 15px 0; }
+    .rule-item { display: flex; align-items: center; margin-bottom: 10px; font-size: 16px; color: #2d3436; font-weight: bold; }
+    .rule-icon { font-size: 24px; margin-right: 10px; }
+
     /* 血條與計分板 */
     .status-container { display: flex; justify-content: space-between; align-items: center; background: #ffeaa7; padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; font-weight: bold; }
     .hp-bar-bg { width: 50%; background: #dfe6e9; border-radius: 10px; height: 18px; overflow: hidden; }
@@ -41,11 +46,33 @@
 <!-- 步驟一：輸入學號/姓名 -->
 <div id="start-card" class="card">
   <h1 style="color: #ff6b81;">⚔️ 吉伊卡哇正字討伐戰 ⚔️</h1>
-  <p style="color: #636E72;">請輸入你的姓名或學號以開始進行挑戰：</p>
+  <p style="color: #636E72;">小勇士，請輸入你的名字開始挑戰：</p>
   <div class="input-group">
     <input type="text" id="student-name" placeholder="例如：張小明 / A1100123" required>
   </div>
-  <button class="btn" style="background: #ff6b81; color: white;" onclick="startGame()">進入討伐戰場</button>
+  <button class="btn" style="background: #ff6b81; color: white;" onclick="goToRules()">下一步：看遊戲玩法 📜</button>
+</div>
+
+<!-- 步驟一.五：遊戲玩法說明 (初小學生友善版) -->
+<div id="rules-card" class="card" style="display: none;">
+  <h2 style="color: #ff6b81; margin-top: 0;">📜 討伐任務玩法指南</h2>
+  
+  <div class="rule-box">
+    <div class="rule-item">
+      <span class="rule-icon">🎯</span>
+      <span><b>選出正確正字：</b>選對答案可以攻擊錯字怪獸，讓怪獸扣血 (HP -10)！</span>
+    </div>
+    <div class="rule-item">
+      <span class="rule-icon">🛡️</span>
+      <span><b>小心怪獸反擊：</b>答錯會被怪獸攻擊，還會被扣 5 分喔！</span>
+    </div>
+    <div class="rule-item">
+      <span class="rule-icon">🏆</span>
+      <span><b>拿到 100 分：</b>打倒怪獸並拿滿 100 分，就能獲得「一級正字達人資格證」！</span>
+    </div>
+  </div>
+
+  <button class="btn" style="background: #00b894; color: white;" onclick="startGame()">我準備好了，開始討伐！ ⚔️</button>
 </div>
 
 <!-- 步驟二：遊戲核心介面 -->
@@ -95,24 +122,24 @@
 </div>
 
 <script>
-  // 1. 圖片路徑設定（請將此處替換為你實際的圖片檔案名稱或直接連結）
+  // 1. 圖片路徑設定
   const CHIIKAWA_IMG = "https://i.postimg.cc/15L6KgrW/Correct-jpg.jpg";
   const HACHIWARE_IMG = "https://i.postimg.cc/sDtSJB48/wrong-jpg.jpg";
   const CERTIFICATE_IMG = "https://i.postimg.cc/X7TFgZkt/final-jpg.jpg";
 
-  // 2. Google Apps Script 部署 URL (用於傳送成績至試算表後台)
+  // 2. Google Apps Script 部署 URL
   const GAS_URL = "https://script.google.com/macros/s/AKfycbwKAAfRohWEI2R1RGMrJjcAHUqGc7vRcYrUn3-Xgc6UyoYQUGPhIEM6M0KTxCEC8ahCEw/exec";
 
-  // 遊戲狀態與題庫 (附帶 AI 錯誤類型標籤 errorType)
+  // 遊戲狀態與題庫
   let studentName = "";
   let score = 50;
   let monsterHP = 100;
   let currentQ = 0;
-  let errorStats = { "形近字混淆": 0, "音近字混淆": 0, "成語誤用": 0, "部首誤用": 0 };
+  let errorStats = { "形近字混淆": 0, "音近字混淆": 0, "部首混淆": 0 };
 
   const questions = [
     { q: "請選出正確的正字：", options: ["澈底", "徹底"], ans: 1, errorType: "形近字混淆" },
-    { q: "請選出正確的正字：", options: ["倒霉", "倒黴"], ans: 1, errorType: "音近字混淆" },
+    { q: "請選出正確的正字：", options: ["倒霉", "倒黴"], ans: 0, errorType: "音近字混淆" },
     { q: "請選出正確的正字：", options: ["名信片", "明信片"], ans: 1, errorType: "形近字混淆" },
     { q: "請選出正確的正字：", options: ["再接再厲", "再接再勵"], ans: 0, errorType: "音近字混淆" },
     { q: "請選出正確的正字：", options: ["按裝", "安裝"], ans: 1, errorType: "音近字混淆" },
@@ -123,7 +150,8 @@
     { q: "請選出正確的正字：", options: ["美輪美奐", "美輪美美"], ans: 0, errorType: "形近字混淆" }
   ];
 
-  function startGame() {
+  // 切換至玩法說明卡
+  function goToRules() {
     const input = document.getElementById("student-name").value.trim();
     if (!input) {
       alert("請輸入姓名或學號喔！");
@@ -131,6 +159,12 @@
     }
     studentName = input;
     document.getElementById("start-card").style.display = "none";
+    document.getElementById("rules-card").style.display = "block";
+  }
+
+  // 開始遊戲
+  function startGame() {
+    document.getElementById("rules-card").style.display = "none";
     document.getElementById("game-card").style.display = "block";
     loadQuestion();
   }
@@ -205,7 +239,7 @@
     document.getElementById("cert-img").src = CERTIFICATE_IMG;
     let aiText = `挑戰者 ${studentName} 成功獲得 100 分！`;
     if (maxCount > 0) {
-      aiText += `<br>發現你在<b>【${mainError}】</b>類型較容易掉入陷阱，建議平時可以多注意部首與成語典故喔！`;
+      aiText += `<br>發現你在<b>【${mainError}】</b>類型較容易掉入陷阱，平時可以多注意喔！`;
     } else {
       aiText += `<br>太厲害了！你的繁體正字觀念非常清晰，完全沒有難倒你！`;
     }
@@ -215,17 +249,20 @@
     document.getElementById("cert-modal").style.display = "flex";
     confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
 
-    // 4. 將數據自動發送至 Google 試算表後台
-    if (GAS_URL && !GAS_URL.includes("貼上你的")) {
+    // 4. 將數據自動發送至 Google 試算表後台 (已修復邏輯漏洞)
+    if (GAS_URL && GAS_URL.startsWith("https://script.google.com")) {
       fetch(GAS_URL, {
         method: "POST",
+                mode: "no-cors",
         body: JSON.stringify({
           name: studentName,
           score: score,
           accuracy: "100%",
           mainError: mainError
         })
-      }).catch(err => console.log("數據傳送錯誤：", err));
+      })
+      .then(res => console.log("數據成功傳送至後台！"))
+      .catch(err => console.log("數據傳送錯誤：", err));
     }
   }
 </script>
