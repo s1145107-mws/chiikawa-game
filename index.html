@@ -48,7 +48,7 @@
   <h1 style="color: #ff6b81;">⚔️ 吉伊卡哇正字討伐戰 ⚔️</h1>
   <p style="color: #636E72;">小勇士，請輸入你的名字開始挑戰：</p>
   <div class="input-group">
-    <input type="text" id="student-name" placeholder="例如：張小明" required>
+    <input type="text" id="student-name" placeholder="例如：張小明 " required>
   </div>
   <button class="btn" style="background: #ff6b81; color: white;" onclick="goToRules()">下一步：看遊戲玩法 📜</button>
 </div>
@@ -135,6 +135,8 @@
   let score = 50;
   let monsterHP = 100;
   let currentQ = 0;
+  let totalAnswered = 0; // 紀錄總答題次數
+  let correctCount = 0;  // 紀錄答對次數
   let errorStats = { "形近字混淆": 0, "音近字混淆": 0, "部首混淆": 0 };
 
   const questions = [
@@ -191,7 +193,10 @@
     const title = document.getElementById("feedback-title");
     const img = document.getElementById("feedback-img");
 
+    totalAnswered++; // 累計總作答題數
+
     if (isCorrect) {
+      correctCount++; // 累計答對題數
       score += 5;
       monsterHP = Math.max(0, monsterHP - 10);
       title.innerText = "答對了！怪獸 HP -10 ⚔️ (+5分)";
@@ -225,7 +230,11 @@
   }
 
   function endGame() {
-    // 1. 找出學生錯最多的類型 (AI 診斷)
+    // 1. 動態計算真實答對率
+    const accuracyCalc = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
+    const accuracyStr = accuracyCalc + "%";
+
+    // 2. 找出學生錯最多的類型 (AI 診斷)
     let mainError = "無（全對，正字大師！）";
     let maxCount = 0;
     for (let type in errorStats) {
@@ -235,9 +244,9 @@
       }
     }
 
-    // 2. 生成小八評語與設定資格證圖片
+    // 3. 生成小八評語與設定資格證圖片
     document.getElementById("cert-img").src = CERTIFICATE_IMG;
-    let aiText = `挑戰者 ${studentName} 成功獲得 100 分！`;
+    let aiText = `挑戰者 ${studentName} 成功獲得 100 分！<br>本次總答題數：${totalAnswered} 題，整體答對率：<b>${accuracyStr}</b>。`;
     if (maxCount > 0) {
       aiText += `<br>發現你在<b>【${mainError}】</b>類型較容易掉入陷阱，平時可以多注意喔！`;
     } else {
@@ -245,11 +254,11 @@
     }
     document.getElementById("ai-feedback-text").innerHTML = aiText;
 
-    // 3. 彈出資格證視窗與彩帶特效
+    // 4. 彈出資格證視窗與彩帶特效
     document.getElementById("cert-modal").style.display = "flex";
     confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
 
-    // 4. 將數據自動發送至 Google 試算表後台 (已修復邏輯漏洞)
+    // 5. 將正確計算的數據自動發送至 Google 試算表後台
     if (GAS_URL && GAS_URL.startsWith("https://script.google.com")) {
       fetch(GAS_URL, {
         method: "POST",
@@ -257,7 +266,7 @@
         body: JSON.stringify({
           name: studentName,
           score: score,
-          accuracy: "100%",
+          accuracy: accuracyStr, // 傳送真實動態計算的答對率
           mainError: mainError
         })
       })
