@@ -48,7 +48,7 @@
   <h1 style="color: #ff6b81;">⚔️ 吉伊卡哇正字討伐戰 ⚔️</h1>
   <p style="color: #636E72;">小勇士，請輸入你的名字開始挑戰：</p>
   <div class="input-group">
-    <input type="text" id="student-name" placeholder="例如：張小明 / A1100123" required>
+    <input type="text" id="student-name" placeholder="例如：張小明" required>
   </div>
   <button class="btn" style="background: #ff6b81; color: white;" onclick="goToRules()">下一步：看遊戲玩法 📜</button>
 </div>
@@ -154,7 +154,7 @@
   function goToRules() {
     const input = document.getElementById("student-name").value.trim();
     if (!input) {
-      alert("請輸入姓名或學號喔！");
+      alert("請輸入姓名喔！");
       return;
     }
     studentName = input;
