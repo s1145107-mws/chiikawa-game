@@ -1,279 +1,2543 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>吉伊卡哇正字討伐大冒險</title>
-  <!-- 載入慶祝彩帶效果套件 -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-  <style>
-    * { box-sizing: border-box; font-family: "Microsoft JhengHei", Arial, sans-serif; }
-    body { background: #fff5f7; text-align: center; padding: 20px; margin: 0; }
-    .card { background: white; max-width: 500px; margin: 0 auto; padding: 25px; border-radius: 20px; box-shadow: 0 8px 20px rgba(255, 182, 193, 0.3); border: 3px solid #ffcdd2; }
-    
-    /* 玩家輸入區 */
-    .input-group { margin: 20px 0; }
-    .input-group input { padding: 12px; font-size: 16px; border: 2px solid #ff9ff3; border-radius: 8px; width: 80%; text-align: center; outline: none; }
-    
-    /* 玩法說明樣式 (專為初小學生設計) */
-    .rule-box { background: #fffdf0; border: 2px dashed #ffeaa7; border-radius: 12px; padding: 15px; text-align: left; margin: 15px 0; }
-    .rule-item { display: flex; align-items: center; margin-bottom: 10px; font-size: 16px; color: #2d3436; font-weight: bold; }
-    .rule-icon { font-size: 24px; margin-right: 10px; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>字靈勇者：正字大對決 | Word Spirit Hero</title>
 
-    /* 血條與計分板 */
-    .status-container { display: flex; justify-content: space-between; align-items: center; background: #ffeaa7; padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; font-weight: bold; }
-    .hp-bar-bg { width: 50%; background: #dfe6e9; border-radius: 10px; height: 18px; overflow: hidden; }
-    .hp-bar-fill { width: 100%; height: 100%; background: #ff7675; transition: width 0.3s; }
-    
-    /* 遊戲題目與按鈕 */
-    .btn { display: block; width: 90%; margin: 12px auto; padding: 14px; font-size: 18px; font-weight: bold; border: 2px solid #ff9ff3; border-radius: 12px; background: white; color: #0984e3; cursor: pointer; transition: 0.2s; }
-    .btn:hover { background: #ff9ff3; color: white; transform: scale(1.02); }
-    
-    /* 彈窗樣式 */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 999; }
-    .modal-content { background: white; padding: 25px; border-radius: 16px; max-width: 400px; text-align: center; }
-    .modal img { max-width: 260px; height: auto; border-radius: 12px; margin: 15px 0; }
-    .close-btn { padding: 10px 24px; font-size: 18px; background: #ff6b81; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-    
-    /* 結算證書圖片容器 */
-    .cert-img-container { width: 100%; margin: 15px 0; }
-    .cert-img-container img { width: 100%; max-width: 350px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-    .ai-box { background: #e8f8f5; border: 2px dashed #1abc9c; padding: 12px; border-radius: 10px; color: #16a085; font-size: 15px; text-align: left; margin-top: 15px; }
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;700;900&family=Baloo+2:wght@600;800&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            game: ['"Baloo 2"', '"Noto Sans HK"', 'system-ui', 'sans-serif'],
+            hk: ['"Noto Sans HK"', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            gold: { DEFAULT: '#ffd54a', deep: '#ff9d00' },
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* ============================================================
+       字靈勇者：正字大對決 | Word Spirit Hero
+       Embedded CSS — VFX & animations (Tailwind handles layout/theme)
+       ============================================================ */
+    :root {
+      --gold: #ffd54a;
+      --gold-deep: #ff9d00;
+      --player: #3ddc97;
+      --monster: #ff5b7f;
+      --accent: #6c8cff;
+      --danger: #ff3b3b;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; overflow: hidden; -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: "Noto Sans HK", "Baloo 2", system-ui, sans-serif;
+      color: #f4f6ff;
+      background:
+        radial-gradient(1200px 700px at 50% -10%, #3b0d63 0%, transparent 55%),
+        radial-gradient(900px 600px at 90% 110%, #1e1b4b 0%, transparent 50%),
+        linear-gradient(160deg, #020617, #1e1b4b 55%, #2e1065);
+    }
+    #app { position: relative; width: 100vw; height: 100vh; }
+
+    /* ---------- Screen switching ---------- */
+    .screen { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; padding: 16px; animation: fadeIn .4s ease; }
+    .screen.active { display: flex; }
+    .hidden { display: none !important; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: none;} }
+
+    /* ---------- Glow / frame helpers ---------- */
+    .glow-border {
+      border: 1px solid rgba(168,139,250,.4);
+      box-shadow: 0 0 24px rgba(139,92,246,.35), inset 0 0 20px rgba(139,92,246,.12);
+    }
+    .glow-gold { box-shadow: 0 0 22px rgba(255,213,74,.5); }
+    .panel-glass { background: rgba(255,255,255,.06); backdrop-filter: blur(12px); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+      color: #1a1030; font-weight: 800; border: none; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(255,157,0,.4);
+      transition: transform .12s ease, filter .2s ease;
+    }
+    .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.05); }
+    .btn-primary:active { transform: translateY(1px) scale(.98); }
+    .btn-ghost {
+      background: transparent; color: #f4f6ff; border: 2px solid rgba(255,255,255,.18);
+      font-weight: 800; cursor: pointer; transition: transform .12s ease, border-color .2s ease;
+    }
+    .btn-ghost:hover { transform: translateY(-2px); border-color: var(--gold); }
+
+    /* global sound mute toggle */
+    .mute-btn { position: fixed; top: 12px; right: 14px; z-index: 90; width: 42px; height: 42px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.22); background: rgba(2,6,23,.6); backdrop-filter: blur(6px);
+      color: #f4f6ff; font-size: 16px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.4); transition: transform .12s ease, border-color .2s ease; }
+    .mute-btn:hover { transform: scale(1.08); border-color: var(--gold); }
+    .mute-btn.muted { color: #94a3b8; }
+
+    /* ---------- Title ---------- */
+    .game-title {
+      background: linear-gradient(135deg, #fff, var(--gold));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+
+    /* ---------- HP bars ---------- */
+    .bar-track { height: 16px; border-radius: 999px; overflow: hidden; background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.14); }
+    .bar-fill { height: 100%; width: 100%; transition: width .5s cubic-bezier(.2,.8,.2,1); border-radius: 999px; }
+    .player-hp { background: linear-gradient(90deg, #2fae7a, var(--player)); }
+    .monster-hp { background: linear-gradient(90deg, var(--monster), #ff9bb2); margin-left: auto; animation: hpPulse 1.6s ease-in-out infinite; }
+    @keyframes hpPulse { 0%,100% { filter: brightness(1);} 50% { filter: brightness(1.25);} }
+
+    .portrait { font-size: 46px; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }
+    .monster-portrait { transition: transform .18s ease, filter .18s ease; }
+    .monster-portrait.hit { animation: monsterHit .4s ease; }
+    @keyframes monsterHit {
+      0% { transform: translateX(0); filter: none; }
+      25% { transform: translateX(10px) scale(1.08); filter: brightness(2) sepia(1) hue-rotate(-40deg); }
+      60% { transform: translateX(-8px); }
+      100% { transform: none; }
+    }
+    .player-portrait.hurt { animation: playerHurt .4s ease; }
+    @keyframes playerHurt { 0%,100% { transform: none; } 30% { transform: translateX(-8px) rotate(-6deg); filter: brightness(.6) sepia(1) hue-rotate(-30deg); } }
+
+    /* ---------- Timer ---------- */
+    .timer-wrap { position: relative; height: 22px; border-radius: 999px; background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.14); overflow: hidden; }
+    .timer-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #4be1c1, #6c8cff); transition: width 1s linear; }
+    .timer-wrap.danger .timer-fill { background: linear-gradient(90deg, #ff6a6a, var(--danger)); }
+    .timer-wrap.danger { animation: pulseRed .6s ease-in-out infinite; }
+    @keyframes pulseRed { 0%,100% { box-shadow: 0 0 0 0 rgba(255,59,59,.5);} 50% { box-shadow: 0 0 14px 4px rgba(255,59,59,.85);} }
+    .timer-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+
+    /* ---------- Battle field frame ---------- */
+    .battle-field {
+      position: relative; border-radius: 22px; overflow: hidden;
+      background: rgba(2,6,23,.5);
+      border: 1px solid rgba(168,139,250,.35);
+      box-shadow: inset 0 0 40px rgba(88,28,135,.4), 0 20px 60px rgba(0,0,0,.5);
+      transition: background 0.6s ease;
+    }
+
+    /* ---------- Immersive per-level atmospheres ---------- */
+    .atmosphere { position: absolute; inset: 0; z-index: 0; pointer-events: none; transition: opacity .6s ease; }
+
+    /* Level 1: dark tower with mist + sparkles */
+    .atmo-tower {
+      background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 45%, #2e1065 100%);
+    }
+    .atmo-tower::before { /* drifting mist */
+      content: ""; position: absolute; inset: -20%;
+      background:
+        radial-gradient(400px 200px at 20% 30%, rgba(139,92,246,.18), transparent 70%),
+        radial-gradient(500px 260px at 80% 60%, rgba(88,28,135,.22), transparent 70%),
+        radial-gradient(300px 180px at 50% 90%, rgba(99,102,241,.15), transparent 70%);
+      animation: mistDrift 14s ease-in-out infinite alternate;
+    }
+    .atmo-tower::after { /* sparkles */
+      content: ""; position: absolute; inset: 0;
+      background-image:
+        radial-gradient(2px 2px at 15% 25%, rgba(255,255,255,.8), transparent),
+        radial-gradient(2px 2px at 35% 70%, rgba(255,213,74,.7), transparent),
+        radial-gradient(1.5px 1.5px at 60% 20%, rgba(255,255,255,.7), transparent),
+        radial-gradient(2px 2px at 80% 55%, rgba(196,181,253,.8), transparent),
+        radial-gradient(1.5px 1.5px at 90% 85%, rgba(255,255,255,.6), transparent),
+        radial-gradient(1.5px 1.5px at 45% 40%, rgba(255,213,74,.6), transparent);
+      animation: sparkleTwinkle 3.5s ease-in-out infinite;
+    }
+    @keyframes mistDrift { 0% { transform: translate(0,0) scale(1);} 100% { transform: translate(3%,-2%) scale(1.06);} }
+    @keyframes sparkleTwinkle { 0%,100% { opacity: .35;} 50% { opacity: .95;} }
+
+    /* Level 2: enchanted forest */
+    .atmo-forest {
+      background: linear-gradient(160deg, #020617 0%, #022c22 40%, #064e3b 65%, #0f172a 100%);
+    }
+    .atmo-forest::before { /* misty green glow */
+      content: ""; position: absolute; inset: -20%;
+      background:
+        radial-gradient(500px 260px at 25% 35%, rgba(16,185,129,.18), transparent 70%),
+        radial-gradient(420px 220px at 75% 65%, rgba(5,150,105,.2), transparent 70%),
+        radial-gradient(300px 160px at 50% 15%, rgba(52,211,153,.14), transparent 70%);
+      animation: mistDrift 16s ease-in-out infinite alternate;
+    }
+    .atmo-forest::after { /* fireflies */
+      content: ""; position: absolute; inset: 0;
+      background-image:
+        radial-gradient(2px 2px at 20% 30%, rgba(134,239,172,.9), transparent),
+        radial-gradient(2px 2px at 55% 60%, rgba(255,213,74,.7), transparent),
+        radial-gradient(1.5px 1.5px at 70% 25%, rgba(167,243,208,.8), transparent),
+        radial-gradient(2px 2px at 85% 70%, rgba(134,239,172,.8), transparent),
+        radial-gradient(1.5px 1.5px at 40% 80%, rgba(255,255,255,.6), transparent);
+      animation: sparkleTwinkle 4s ease-in-out infinite;
+    }
+
+    /* ---------- Stage monster (top-center boss) ---------- */
+    .stage-monster {
+      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+      z-index: 4; text-align: center; pointer-events: none;
+    }
+    /* Level 1 boss ~35-40% of the arena, menacing aura */
+    .stage-monster.boss {
+      width: 40%; max-width: 400px;
+    }
+    .stage-monster .monster-aura {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 140%; height: 140%; border-radius: 50%; z-index: -1;
+      background: radial-gradient(circle, rgba(255,60,90,.35), rgba(139,0,60,.12) 55%, transparent 72%);
+      filter: blur(6px); animation: auraThrob 2.4s ease-in-out infinite;
+    }
+    @keyframes auraThrob { 0%,100% { opacity: .55; transform: translate(-50%,-50%) scale(1);} 50% { opacity: 1; transform: translate(-50%,-50%) scale(1.12);} }
+    .stage-monster .monster-body {
+      position: relative; line-height: 1;
+      font-size: clamp(120px, 26vh, 260px);
+      filter: drop-shadow(0 10px 22px rgba(0,0,0,.6)) drop-shadow(0 0 18px rgba(255,60,90,.5));
+      animation: monsterBob 3.2s ease-in-out infinite;
+    }
+    .stage-monster.forest .monster-body { font-size: clamp(56px, 10vh, 96px); filter: drop-shadow(0 8px 16px rgba(0,0,0,.5)); }
+    /* menacing glowing eyes overlay */
+    .stage-monster .eyes { position: absolute; top: 40%; left: 50%; transform: translateX(-50%); display: flex; gap: 22%; width: 46%; justify-content: space-between; pointer-events: none; }
+    .stage-monster .eyes span {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: radial-gradient(circle, #fff, #ff2d2d 60%, #7f1d1d);
+      box-shadow: 0 0 12px 3px rgba(255,45,45,.9); animation: eyeGlow 1.6s ease-in-out infinite;
+    }
+    .stage-monster.forest .eyes { display: none; }
+    @keyframes eyeGlow { 0%,100% { opacity: .7; } 50% { opacity: 1; box-shadow: 0 0 18px 5px rgba(255,45,45,1);} }
+    /* spikes crown */
+    .stage-monster .spikes { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; }
+    .stage-monster .spikes i {
+      width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent;
+      border-bottom: 22px solid #b91c1c; filter: drop-shadow(0 0 6px rgba(255,60,90,.7));
+    }
+    .stage-monster.forest .spikes { display: none; }
+
+    @keyframes monsterBob { 0%,100% { transform: translateY(0) rotate(-1deg);} 50% { transform: translateY(-8px) rotate(1deg);} }
+    /* dramatic violent hit: red flash + hard shake */
+    .stage-monster.hit .monster-body { animation: stageMonsterHit .5s ease; }
+    @keyframes stageMonsterHit {
+      0% { transform: none; }
+      12% { transform: translate(16px,-6px) scale(1.12) rotate(4deg); filter: brightness(3) saturate(3) sepia(1) hue-rotate(-30deg) drop-shadow(0 0 30px rgba(255,0,0,1)); }
+      28% { transform: translate(-16px,4px) rotate(-5deg); filter: brightness(2.6) sepia(1) hue-rotate(-30deg); }
+      45% { transform: translate(12px,-3px) rotate(3deg); }
+      65% { transform: translate(-8px,2px) rotate(-2deg); }
+      100% { transform: none; }
+    }
+    .stage-monster .monster-mouth {
+      position: absolute; bottom: 22%; left: 50%; transform: translateX(-50%);
+      width: 34px; height: 16px; border-radius: 0 0 22px 22px;
+      background: radial-gradient(circle at 50% 0%, #7f1d1d, #450a0a);
+      box-shadow: 0 0 12px rgba(255,80,80,.6);
+    }
+    .stage-monster.forest .monster-mouth { display: none; }
+    /* bubbles spouting from the monster's mouth */
+    .spout-bubble {
+      position: absolute; border-radius: 50%; pointer-events: none; z-index: 3;
+      background: radial-gradient(circle at 30% 28%, rgba(255,255,255,.9), rgba(120,170,255,.5) 55%, rgba(70,110,220,.3) 75%);
+      border: 1px solid rgba(255,255,255,.55);
+      box-shadow: 0 0 10px rgba(120,170,255,.5);
+      animation: spoutRise var(--spout-dur, 1s) ease-out forwards;
+    }
+    @keyframes spoutRise {
+      0% { transform: translate(-50%,0) scale(.3); opacity: 0; }
+      20% { opacity: .9; }
+      100% { transform: translate(calc(-50% + var(--spout-dx,0px)), var(--spout-dy,-90px)) scale(1); opacity: 0; }
+    }
+
+    /* ---------- Cartoon magical forest (Level 2) ---------- */
+    .atmo-forest.cartoon { background: linear-gradient(180deg, #7dd3fc 0%, #bbf7d0 42%, #86efac 70%, #4ade80 100%); }
+    .atmo-forest.cartoon::before, .atmo-forest.cartoon::after { display: none; }
+    .forest-scene { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+    .forest-scene .sun { position: absolute; top: 6%; right: 10%; width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle, #fff7cc, #fde047 60%, #facc15); box-shadow: 0 0 50px 14px rgba(253,224,71,.7); animation: sunPulse 4s ease-in-out infinite; }
+    @keyframes sunPulse { 0%,100% { transform: scale(1);} 50% { transform: scale(1.08);} }
+    .forest-scene .cloud { position: absolute; background: #fff; border-radius: 999px; opacity: .9; filter: drop-shadow(0 6px 10px rgba(0,0,0,.06)); animation: cloudDrift 26s linear infinite; }
+    .forest-scene .cloud::before, .forest-scene .cloud::after { content:""; position:absolute; background:#fff; border-radius:50%; }
+    @keyframes cloudDrift { 0% { transform: translateX(-10%);} 100% { transform: translateX(110vw);} }
+    /* canopy layers */
+    .forest-scene .canopy { position: absolute; left: 0; right: 0; height: 120px; }
+    .forest-scene .canopy.c1 { top: -30px; background:
+      radial-gradient(60px 50px at 10% 60%, #16a34a 70%, transparent 72%),
+      radial-gradient(80px 60px at 30% 40%, #15803d 70%, transparent 72%),
+      radial-gradient(70px 55px at 55% 55%, #16a34a 70%, transparent 72%),
+      radial-gradient(90px 65px at 78% 42%, #15803d 70%, transparent 72%),
+      radial-gradient(65px 50px at 95% 60%, #16a34a 70%, transparent 72%); }
+    /* trees */
+    .tree { position: absolute; bottom: 0; }
+    .tree .trunk { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 28px; height: 120px; background: linear-gradient(90deg, #7c4a1e, #a16207 50%, #7c4a1e); border-radius: 8px; }
+    .tree .leaves { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); width: 150px; height: 130px;
+      background: radial-gradient(60px 55px at 30% 60%, #22c55e 72%, transparent 74%),
+                  radial-gradient(70px 62px at 55% 40%, #16a34a 72%, transparent 74%),
+                  radial-gradient(58px 52px at 78% 62%, #4ade80 72%, transparent 74%),
+                  radial-gradient(50px 46px at 50% 80%, #22c55e 72%, transparent 74%);
+      filter: drop-shadow(0 8px 10px rgba(0,0,0,.12)); animation: leafSway 5s ease-in-out infinite; }
+    @keyframes leafSway { 0%,100% { transform: translateX(-50%) rotate(-1.5deg);} 50% { transform: translateX(-50%) rotate(1.5deg);} }
+    .tree .branch { position: absolute; height: 16px; border-radius: 8px; background: linear-gradient(90deg,#7c4a1e,#a16207); }
+    /* host canopy at the TOP-centre (monster perch) — no central trunk crossing the play area */
+    .host-canopy { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 300px; height: 190px; pointer-events: none; }
+    .host-canopy .leaves { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 300px; height: 170px;
+      background: radial-gradient(80px 66px at 25% 60%, #22c55e 72%, transparent 74%),
+                  radial-gradient(96px 78px at 52% 42%, #16a34a 72%, transparent 74%),
+                  radial-gradient(78px 66px at 80% 60%, #4ade80 72%, transparent 74%),
+                  radial-gradient(70px 60px at 50% 82%, #22c55e 72%, transparent 74%);
+      filter: drop-shadow(0 10px 12px rgba(0,0,0,.15)); animation: leafSway 5s ease-in-out infinite; }
+    .host-canopy .branch { position: absolute; top: 120px; left: 50%; transform: translateX(-50%); width: 150px; height: 16px; border-radius: 8px; background: linear-gradient(90deg,#7c4a1e,#a16207,#7c4a1e); box-shadow: 0 4px 8px rgba(0,0,0,.2); }
+
+    /* ---------- Level 3: castle + lightning storm ---------- */
+    .atmo-castle { background: linear-gradient(180deg, #0b1026 0%, #1e1b4b 45%, #312e81 100%); }
+    .atmo-castle::before { /* castle silhouette + storm clouds */
+      content: ""; position: absolute; inset: 0;
+      background:
+        radial-gradient(600px 240px at 50% -8%, rgba(30,27,75,.9), transparent 70%),
+        linear-gradient(180deg, rgba(2,6,23,.6), transparent 40%);
+    }
+    .atmo-castle::after { /* rain streaks */
+      content: ""; position: absolute; inset: 0; opacity: .5;
+      background-image: repeating-linear-gradient(105deg, rgba(180,200,255,.18) 0 1px, transparent 1px 9px);
+      animation: rainFall .5s linear infinite;
+    }
+    @keyframes rainFall { 0% { background-position: 0 0;} 100% { background-position: -40px 120px;} }
+    .lightning-flash { position: absolute; inset: 0; z-index: 3; pointer-events: none; background: rgba(200,220,255,.85); opacity: 0; }
+    .lightning-flash.strike { animation: lightningFlash .5s ease; }
+    @keyframes lightningFlash { 0%{opacity:0;} 8%{opacity:.9;} 16%{opacity:.1;} 24%{opacity:.7;} 40%{opacity:0;} 100%{opacity:0;} }
+    .castle-towers { position: absolute; bottom: 0; left: 0; right: 0; height: 44%; z-index: 1; pointer-events: none;
+      background:
+        linear-gradient(#1e1b4b,#1e1b4b) 8% 100% / 60px 70% no-repeat,
+        linear-gradient(#312e81,#312e81) 24% 100% / 90px 90% no-repeat,
+        linear-gradient(#1e1b4b,#1e1b4b) 72% 100% / 90px 88% no-repeat,
+        linear-gradient(#312e81,#312e81) 90% 100% / 60px 66% no-repeat;
+      filter: drop-shadow(0 -4px 10px rgba(0,0,0,.4)); }
+
+    /* ---------- Level 1: castle balcony / parapet ---------- */
+    .atmo-castle-balcony { background: linear-gradient(180deg, #1e1b4b 0%, #2e1065 48%, #0b1026 100%); }
+    .atmo-castle-balcony::before { content:""; position:absolute; inset:0; /* stars + moon glow */
+      background:
+        radial-gradient(2px 2px at 20% 22%, rgba(255,255,255,.8), transparent),
+        radial-gradient(1.5px 1.5px at 68% 16%, rgba(255,255,255,.6), transparent),
+        radial-gradient(2px 2px at 85% 30%, rgba(196,181,253,.7), transparent),
+        radial-gradient(220px 220px at 78% 12%, rgba(253,224,71,.18), transparent 70%);
+      animation: sparkleTwinkle 4s ease-in-out infinite; }
+    /* full gothic castle tower rising in the centre background */
+    .castle-balcony { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 460px; max-width: 82%; height: 82%; z-index: 1; pointer-events: none; }
+    .castle-svg { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 -6px 24px rgba(0,0,0,.5)); }
+    .castle-balcony .torch { position: absolute; top: 20%; width: 8px; height: 56px; background: linear-gradient(#7c4a1e,#4b2e12); border-radius: 4px; z-index: 2; }
+    .castle-balcony .torch.left { left: 20%; } .castle-balcony .torch.right { right: 20%; }
+    .torch .flame, .d-torch .flame { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 20px; height: 30px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      background: radial-gradient(circle at 50% 70%, #fff7cc, #fb923c 45%, #ea580c 75%, transparent);
+      box-shadow: 0 0 22px 8px rgba(251,146,60,.6); animation: flameFlicker .3s ease-in-out infinite alternate; }
+    @keyframes flameFlicker { 0%{ transform: translateX(-50%) scale(.9) rotate(-3deg); opacity:.85;} 100%{ transform: translateX(-50%) scale(1.12) rotate(3deg); opacity:1;} }
+
+    /* ---------- Level 2: eerie dungeon cell ---------- */
+    /* detailed dark stone-brick dungeon wall */
+    .atmo-dungeon-cell { background:
+      linear-gradient(180deg, #263241 0%, #1a2130 45%, #0b0f19 100%); }
+    .atmo-dungeon-cell::before { content:""; position:absolute; inset:0; /* stone brick tiles (offset rows) */
+      background:
+        repeating-linear-gradient(0deg, rgba(0,0,0,.55) 0 2px, transparent 2px 42px),
+        repeating-linear-gradient(90deg, rgba(0,0,0,.5) 0 2px, transparent 2px 86px),
+        repeating-linear-gradient(0deg, rgba(255,255,255,.035) 2px 3px, transparent 3px 42px);
+      opacity:.7; }
+    /* warm amber torch light washing the stone + vignette */
+    .atmo-dungeon-cell::after { content:""; position:absolute; inset:0;
+      background:
+        radial-gradient(300px 260px at 8% 34%, rgba(251,146,60,.20), transparent 70%),
+        radial-gradient(300px 260px at 92% 34%, rgba(251,146,60,.20), transparent 70%),
+        radial-gradient(720px 460px at 50% 30%, transparent 24%, rgba(0,0,0,.8) 100%); }
+    .dungeon-cell { position:absolute; inset:0; z-index:1; pointer-events:none; }
+    .dungeon-cell .dungeon-wall { position:absolute; inset:0; z-index:0;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, transparent 1px 42px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 1px, transparent 1px 86px); }
+    /* illustrated stone archway framing the top vault */
+    .dungeon-cell .dungeon-arch { position:absolute; top:0; left:50%; transform:translateX(-50%); width:70%; max-width:640px; height:56%; z-index:0;
+      border: 18px solid #3a4557; border-bottom:none; border-radius: 50% 50% 0 0 / 90% 90% 0 0;
+      box-shadow: inset 0 0 40px rgba(0,0,0,.7), 0 0 24px rgba(0,0,0,.5);
+      background: radial-gradient(120% 90% at 50% 0%, rgba(20,27,38,.5), rgba(2,6,23,.75)); }
+    .dungeon-cell .dungeon-arch::before { content:""; position:absolute; inset:-18px; border-radius:inherit; /* brick joints on arch */
+      background: repeating-conic-gradient(from 0deg at 50% 100%, rgba(0,0,0,.35) 0 6deg, transparent 6deg 12deg); -webkit-mask: radial-gradient(50% 90% at 50% 0%, #000 68%, transparent 70%); mask: radial-gradient(50% 90% at 50% 0%, #000 68%, transparent 70%); opacity:.5; }
+
+    /* centered stone staircase descending into the vault (perspective of depth) */
+    .dungeon-stairs { position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:56%; max-width:520px; height:52%; z-index:0; }
+    .dungeon-stairs span { position:absolute; left:50%; transform:translateX(-50%);
+      bottom: calc(var(--i) * 12%);
+      width: calc(28% + var(--i) * 10%);
+      height: 9%;
+      background: linear-gradient(180deg, #3a4557, #232c3a 55%, #141b26);
+      border-top: 2px solid rgba(255,255,255,.08);
+      box-shadow: 0 4px 8px rgba(0,0,0,.55);
+      border-radius: 3px; }
+
+    /* ===== heavy iron cage (牢籠), enlarged 150% & centred in the UPPER viewport ===== */
+    .iron-cage { position:absolute; top:3%; left:50%; transform:translateX(-50%); width:330px; max-width:74%; height:300px; z-index:5; }
+    /* back frame — BEHIND the monster (z 1) */
+    .iron-cage .cage-back { position:absolute; inset:8px 2px 16px; z-index:1; border-radius:8px;
+      background: linear-gradient(180deg, rgba(30,41,59,.55), rgba(2,6,23,.7));
+      box-shadow: inset 0 0 26px rgba(0,0,0,.8); }
+    .iron-cage .cage-back::before { content:""; position:absolute; inset:0; /* faint back bars */
+      background: repeating-linear-gradient(90deg, transparent 0 26px, rgba(100,116,139,.35) 26px 30px); }
+    /* the trapped monster sprite — INSIDE the cage (z 5), sized to fit 100% within bounds */
+    .iron-cage .caged-monster { position:absolute; z-index:5; left:50%; bottom:34px; transform:translateX(-50%);
+      font-size:140px; line-height:1; filter: drop-shadow(0 6px 12px rgba(0,0,0,.6)) drop-shadow(0 0 18px rgba(255,60,90,.55));
+      animation: monsterBob 3s ease-in-out infinite; }
+    .iron-cage .caged-monster.hit { animation: stageMonsterHit .5s ease; }
+    /* front bars — IN FRONT of the monster (z 10) */
+    .iron-cage .cage-bars { position:absolute; inset:14px 2px 18px; z-index:10; display:flex; justify-content:space-between; }
+    .iron-cage .cage-bars span { width:10px; border-radius:6px; background: linear-gradient(90deg,#0b0f19,#94a3b8 45%,#475569 55%,#0b0f19); box-shadow: 0 0 6px rgba(0,0,0,.85), inset 0 0 3px rgba(255,255,255,.3); }
+    .iron-cage .cage-top { position:absolute; top:6px; left:-4%; right:-4%; height:16px; z-index:11; border-radius:10px; background: linear-gradient(180deg,#94a3b8,#334155 60%,#0b0f19); box-shadow: 0 3px 8px rgba(0,0,0,.7); }
+    .iron-cage .cage-top::before { content:""; position:absolute; top:-14px; left:50%; transform:translateX(-50%); width:34px; height:20px; border:6px solid #64748b; border-bottom:none; border-radius:20px 20px 0 0; } /* hanging ring */
+    .iron-cage .cage-base { position:absolute; bottom:0; left:-4%; right:-4%; height:18px; z-index:11; border-radius:8px; background: linear-gradient(180deg,#475569,#0b0f19); box-shadow: 0 4px 10px rgba(0,0,0,.7); }
+    /* horizontal binding rings across the front (z 11) */
+    .iron-cage .cage-ring { position:absolute; left:-3%; right:-3%; height:8px; z-index:11; border-radius:6px; background: linear-gradient(90deg,#0b0f19,#64748b,#0b0f19); box-shadow:0 0 6px rgba(0,0,0,.7); }
+    .iron-cage .cage-ring.r1 { top:38%; } .iron-cage .cage-ring.r2 { top:70%; }
+    .iron-cage .cage-lock { position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); width:30px; height:30px; z-index:12; border-radius:6px; background: radial-gradient(circle at 40% 35%, #fde047, #a16207 70%); display:flex; align-items:center; justify-content:center; color:#3b2f0b; font-size:14px; box-shadow:0 2px 8px rgba(0,0,0,.6); }
+    .chain { position:absolute; top:0; width:8px; height:120px; background: repeating-linear-gradient(0deg,#94a3b8 0 8px,#475569 8px 14px); opacity:.7; z-index:2; }
+    .chain.c1 { left:30%; transform: rotate(4deg); } .chain.c2 { right:30%; transform: rotate(-4deg); }
+    .d-torch { position:absolute; top:30%; width:10px; height:56px; background: linear-gradient(#7c4a1e,#4b2e12); border-radius:4px; z-index:3; }
+    .d-torch.left { left:6%; } .d-torch.right { right:6%; }
+    .d-torch .flame { box-shadow: 0 0 26px 10px rgba(251,146,60,.55); }
+
+    /* ---------- Level 4: spooky night forest ---------- */
+    .atmo-dungeon { background: linear-gradient(180deg, #0b1026 0%, #1e1b4b 40%, #2e1065 75%, #0b0f19 100%); }
+    .atmo-dungeon::before { content: ""; position: absolute; inset: 0; /* eerie fog + stars */
+      background:
+        radial-gradient(2px 2px at 18% 20%, rgba(255,255,255,.7), transparent),
+        radial-gradient(1.5px 1.5px at 62% 14%, rgba(255,255,255,.6), transparent),
+        radial-gradient(2px 2px at 84% 26%, rgba(196,181,253,.7), transparent),
+        radial-gradient(420px 200px at 50% 100%, rgba(76,29,149,.4), transparent 70%);
+      animation: sparkleTwinkle 4s ease-in-out infinite; }
+    .atmo-dungeon::after { content: ""; position: absolute; inset: 0; background: radial-gradient(600px 380px at 50% 45%, transparent 35%, rgba(0,0,0,.75) 100%); }
+
+    /* spooky forest scenery */
+    .spooky-scene { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+    .spooky-scene .moon { position: absolute; top: 8%; right: 12%; width: 74px; height: 74px; border-radius: 50%;
+      background: radial-gradient(circle at 38% 34%, #fefce8, #e2e8f0 55%, #94a3b8); box-shadow: 0 0 50px 16px rgba(226,232,240,.5); }
+    .spooky-scene .s-tree { position: absolute; bottom: 0; width: 0; height: 0; filter: drop-shadow(0 0 6px rgba(0,0,0,.6)); }
+    /* gnarled dark tree silhouettes */
+    .spooky-scene .s-tree::before { content: ""; position: absolute; bottom: 0; width: 26px; height: 60vh; background: linear-gradient(90deg,#0b0f19,#1f2937,#0b0f19); border-radius: 40% 40% 0 0 / 8% 8% 0 0; transform-origin: bottom; }
+    .spooky-scene .s-tree::after { content: ""; position: absolute; bottom: 30vh; left: -20px; width: 64px; height: 60px; background: radial-gradient(circle,#111827 60%, transparent 62%); }
+    .spooky-scene .st1 { left: 3%; } .spooky-scene .st1::before { transform: rotate(-3deg); }
+    .spooky-scene .st2 { left: 15%; height: 0; } .spooky-scene .st2::before { height: 46vh; transform: rotate(4deg); }
+    .spooky-scene .st3 { right: 4%; } .spooky-scene .st3::before { transform: rotate(2deg); }
+    .spooky-scene .st4 { right: 17%; } .spooky-scene .st4::before { height: 48vh; transform: rotate(-5deg); }
+    /* dark bushes with glowing eyes */
+    .spooky-scene .bush { position: absolute; bottom: -18px; width: 180px; height: 90px; border-radius: 50% 50% 0 0; background: radial-gradient(circle at 50% 30%, #14532d, #052e16 70%); box-shadow: 0 0 24px rgba(0,0,0,.6); }
+    .spooky-scene .bush.bl { left: -20px; } .spooky-scene .bush.br { right: -20px; }
+    .eye { position: absolute; top: 30px; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle,#fff,#fde047 55%,#f59e0b); box-shadow: 0 0 10px 3px rgba(253,224,71,.9); animation: blink 3.4s ease-in-out infinite; }
+    .bush .eye:first-of-type { left: 62px; } .bush .eye:last-of-type { left: 92px; }
+    @keyframes blink { 0%,44%,50%,100% { opacity: 1; } 46%,48% { opacity: .05; } }
+
+    /* the scratch card nestled BEHIND spooky obstacles */
+    .scratch-obstacle { position: relative; padding: 6px; }
+    .scratch-obstacle .obstacle-trunk { position: absolute; top: -14px; bottom: -14px; width: 40px; z-index: 4; background: linear-gradient(90deg,#0b0f19,#3f2a17 50%,#0b0f19); border-radius: 10px; box-shadow: 0 0 16px rgba(0,0,0,.7); pointer-events: none; }
+    .scratch-obstacle .obstacle-trunk.left { left: -18px; transform: rotate(-3deg); }
+    .scratch-obstacle .obstacle-trunk.right { right: -18px; transform: rotate(3deg); }
+    .scratch-obstacle .obstacle-bush { position: absolute; left: 50%; transform: translateX(-50%); bottom: -26px; width: 220px; height: 70px; border-radius: 50% 50% 0 0; background: radial-gradient(circle at 50% 20%, #14532d, #052e16 72%); z-index: 5; pointer-events: none; box-shadow: 0 0 20px rgba(0,0,0,.6); }
+    .scratch-obstacle .obstacle-bush .eye { top: 18px; }
+    .scratch-obstacle .obstacle-bush .eye:first-of-type { left: 84px; } .scratch-obstacle .obstacle-bush .eye:last-of-type { left: 120px; }
+
+    /* ---------- Level 3: shield mechanic ---------- */
+    .shield-wrap { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 2; }
+    .shield-prompt {
+      background: rgba(2,6,23,.6); border: 1px solid rgba(147,197,253,.5); box-shadow: 0 0 20px rgba(96,165,250,.4);
+      border-radius: 999px; padding: 8px 22px; font-weight: 900; font-size: 26px; color: #fff; margin-bottom: 24px;
+      text-shadow: 0 2px 6px rgba(0,0,0,.6);
+    }
+    .shield-prompt .blank { color: var(--gold); }
+    .hero-zone { position: relative; display: flex; flex-direction: column; align-items: center; }
+    .lightning-charge {
+      position: absolute; top: -70px; left: 50%; transform: translateX(-50%);
+      width: 60px; height: 60px; border-radius: 50%;
+      background: radial-gradient(circle, #fff, #93c5fd 45%, #3b82f6 75%, transparent);
+      box-shadow: 0 0 30px 10px rgba(96,165,250,.7); animation: chargePulse 1.1s ease-in-out infinite;
+    }
+    @keyframes chargePulse { 0%,100% { transform: translateX(-50%) scale(.9); opacity: .8;} 50% { transform: translateX(-50%) scale(1.2); opacity: 1;} }
+    .hero-avatar { font-size: 60px; filter: drop-shadow(0 6px 12px rgba(0,0,0,.5)); animation: monsterBob 3s ease-in-out infinite; }
+    .shield-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 22px; }
+    .shield-opt {
+      position: relative; min-width: 140px; padding: 16px 18px; cursor: pointer; user-select: none;
+      background: linear-gradient(160deg, rgba(59,130,246,.22), rgba(30,41,59,.6));
+      border: 2px solid rgba(147,197,253,.5); border-radius: 16px 16px 22px 22px / 16px 16px 40px 40px;
+      color: #fff; font-weight: 900; font-size: 26px; text-align: center;
+      box-shadow: inset 0 0 18px rgba(147,197,253,.25), 0 6px 16px rgba(0,0,0,.4);
+      transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .shield-opt .opt-key { display: block; font-size: 12px; color: #93c5fd; font-weight: 800; margin-bottom: 2px; }
+    .shield-opt:hover { transform: translateY(-3px); border-color: var(--gold); box-shadow: inset 0 0 20px rgba(255,213,74,.3), 0 8px 20px rgba(255,213,74,.25); }
+    .shield-opt.correct { animation: shieldRaise .5s ease; border-color: var(--gold); box-shadow: 0 0 34px 8px rgba(255,213,74,.7), inset 0 0 24px rgba(255,255,255,.35); }
+    .shield-opt.wrong { animation: wrongShake .4s ease; border-color: var(--monster); }
+    .shield-opt.used { opacity: .3; pointer-events: none; }
+    @keyframes shieldRaise { 0% { transform: scale(1);} 40% { transform: scale(1.15) translateY(-6px);} 100% { transform: scale(1);} }
+    /* reflected lightning beam */
+    .reflect-beam { position: absolute; z-index: 9; height: 12px; border-radius: 999px; transform-origin: 0 50%;
+      background: linear-gradient(90deg, rgba(147,197,253,0), #fff 20%, #93c5fd 55%, #3b82f6);
+      box-shadow: 0 0 22px 6px rgba(96,165,250,.85); animation: beamFire .5s ease forwards; }
+
+    /* Level 3 drag-to-connect arena */
+    .connect-arena { position: relative; width: 100%; height: 100%; touch-action: none; }
+    .connect-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+    .connect-svg line { stroke: url(#lineGrad); stroke-width: 8; stroke-linecap: round; filter: drop-shadow(0 0 8px rgba(255,213,74,.9)); }
+    .shield-options-free { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+    /* free-positioned shields override the grid layout */
+    .shield-options-free .shield-opt { position: absolute; transform: translate(-50%,-50%); min-width: 118px; pointer-events: auto; }
+    .shield-options-free .shield-opt.correct, .shield-options-free .shield-opt:hover { transform: translate(-50%,-50%); }
+    .shield-options-free .shield-opt.over { border-color: var(--gold); box-shadow: 0 0 24px 6px rgba(255,213,74,.6), inset 0 0 20px rgba(255,213,74,.3); }
+    .shield-options-free .shield-opt.raise { animation: shieldRaiseFree .5s ease; }
+    @keyframes shieldRaiseFree { 0%{transform:translate(-50%,-50%) scale(1);} 40%{transform:translate(-50%,-54%) scale(1.15);} 100%{transform:translate(-50%,-50%) scale(1);} }
+    .hero-node {
+      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 5;
+      display: flex; flex-direction: column; align-items: center; cursor: grab; user-select: none;
+    }
+    .hero-node:active { cursor: grabbing; }
+    .hero-node .hero-face { font-size: 58px; filter: drop-shadow(0 6px 12px rgba(0,0,0,.55)); animation: monsterBob 3s ease-in-out infinite; }
+    .hero-node .node-dot { width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle,#fff,var(--gold) 60%,var(--gold-deep)); box-shadow: 0 0 16px 4px rgba(255,213,74,.8); margin-top: -6px; animation: chargePulse 1.4s ease-in-out infinite; }
+    .connect-tip { position: absolute; bottom: 96px; left: 50%; transform: translateX(-50%); color: #cbd5e1; font-size: 13px; white-space: nowrap; z-index: 5; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+    /* thunderbolts charging in the boss's hands (Level 3) */
+    .stage-monster.thunder .bolt {
+      position: absolute; bottom: 6%; z-index: 6;
+      font-size: clamp(48px, 9vh, 92px); line-height: 1;
+      filter: drop-shadow(0 0 10px #fde047) drop-shadow(0 0 18px #3b82f6);
+    }
+    /* glowing electric orb behind each bolt (the "charge") */
+    .stage-monster.thunder .bolt::before {
+      content: ""; position: absolute; top: 50%; left: 50%; width: 150%; height: 150%;
+      transform: translate(-50%,-50%); border-radius: 50%; z-index: -1;
+      background: radial-gradient(circle, rgba(255,255,255,.95), rgba(253,224,71,.7) 35%, rgba(59,130,246,.55) 60%, transparent 72%);
+      animation: orbCharge .35s ease-in-out infinite alternate;
+    }
+    .stage-monster.thunder .bolt.left  { left: -10%;  animation: boltCrackleL .28s steps(2) infinite; }
+    .stage-monster.thunder .bolt.right { right: -10%; animation: boltCrackleR .28s steps(2) infinite; }
+    @keyframes boltCrackleL { 0%{ transform: rotate(-20deg) scale(.94);} 100%{ transform: rotate(-12deg) scale(1.12);} }
+    @keyframes boltCrackleR { 0%{ transform: rotate(20deg) scale(.94);} 100%{ transform: rotate(12deg) scale(1.12);} }
+    @keyframes orbCharge { 0%{ opacity:.65; transform: translate(-50%,-50%) scale(.85);} 100%{ opacity:1; transform: translate(-50%,-50%) scale(1.2);} }
+    /* faint arcs of electricity between the two hands */
+    .stage-monster.thunder .arc {
+      position: absolute; bottom: 14%; left: 50%; transform: translateX(-50%);
+      width: 70%; height: 30%; z-index: 5; pointer-events: none;
+      background:
+        repeating-linear-gradient(76deg, transparent 0 6px, rgba(147,197,253,.9) 6px 7px, transparent 7px 13px);
+      -webkit-mask: radial-gradient(ellipse at 50% 50%, #000 40%, transparent 72%);
+              mask: radial-gradient(ellipse at 50% 50%, #000 40%, transparent 72%);
+      opacity: .7; animation: arcFlicker .18s steps(2) infinite;
+    }
+    @keyframes arcFlicker { 0%{ opacity:.25;} 100%{ opacity:.85;} }
+
+    /* ---------- Level 4: shared scratch-card styles (reused by focus card) ---------- */
+    .scratch-hint { color: #cbd5e1; font-size: 14px; }
+    .scratch-stage { position: relative; z-index: 6; width: 360px; max-width: 84vw; height: 200px; border-radius: 18px; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.08); }
+    .scratch-word {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      /* high-contrast, large & bold revealed word on a clear framed background */
+      font-size: 84px; font-weight: 900; color: #ffffff; letter-spacing: 10px;
+      background: linear-gradient(180deg, #1e293b, #0f172a);
+      border: 3px solid rgba(255,255,255,.75); border-radius: 16px;
+      text-shadow: 0 0 4px #000, 0 3px 10px rgba(0,0,0,.9);
+      -webkit-text-stroke: 1px rgba(0,0,0,.5);
+    }
+    .scratch-canvas { position: absolute; inset: 0; touch-action: none; cursor: crosshair; z-index: 2; }
+    /* buttons: hidden = faded/disabled; .show = full opacity + clickable */
+    .scratch-actions { display: flex; gap: 16px; margin-top: 6px; opacity: 0; pointer-events: none; transition: opacity .3s ease; }
+    .scratch-actions.show { opacity: 1; pointer-events: auto; }
+    .btn-erase, .btn-keep { border: none; cursor: pointer; font-weight: 900; font-family: inherit; font-size: 18px; border-radius: 999px; padding: 15px 28px; color: #fff; transition: transform .12s ease, filter .2s ease; box-shadow: 0 8px 20px rgba(0,0,0,.4); }
+    .btn-erase { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .btn-keep  { background: linear-gradient(135deg, #22c55e, #15803d); }
+    .btn-erase:hover, .btn-keep:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .btn-erase:active, .btn-keep:active { transform: translateY(1px) scale(.98); }
+    .scratch-actions.reveal-in { animation: modalPop .35s cubic-bezier(.2,.9,.3,1.2); }
+
+    /* ---------- Level 4: Where's-Wally spooky forest search map ---------- */
+    .forest-map { position: absolute; inset: 0; z-index: 2; overflow: hidden;
+      background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 55%, #020617 100%); }
+    .forest-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+    .forest-svg .beam { animation: beamSway 7s ease-in-out infinite alternate; transform-origin: 830px 90px; }
+    .forest-svg .beam2 { animation-duration: 9s; transform-origin: 610px 90px; }
+    @keyframes beamSway { 0%{ opacity:.5; transform: rotate(-1deg);} 100%{ opacity:.9; transform: rotate(1.5deg);} }
+    /* floating fireflies */
+    .fireflies { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+    .fireflies span { position: absolute; width: 5px; height: 5px; border-radius: 50%;
+      background: radial-gradient(circle, #fff, #fde047 55%, transparent);
+      box-shadow: 0 0 10px 3px rgba(253,224,71,.8); animation: fireFloat 6s ease-in-out infinite; }
+    .fireflies span:nth-child(2){ animation-duration: 7.5s; animation-delay:-2s; }
+    .fireflies span:nth-child(3){ animation-duration: 5.5s; animation-delay:-1s; }
+    .fireflies span:nth-child(4){ animation-duration: 8s; animation-delay:-3s; }
+    .fireflies span:nth-child(5){ animation-duration: 6.8s; animation-delay:-4s; }
+    .fireflies span:nth-child(6){ animation-duration: 7s; animation-delay:-1.5s; }
+    @keyframes fireFloat { 0%,100%{ transform: translate(0,0); opacity:.35;} 25%{ opacity:1;} 50%{ transform: translate(14px,-20px); opacity:.7;} 75%{ transform: translate(-10px,-8px); opacity:.5;} }
+
+    .fm-hint { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 6; color: #fde68a; font-weight: 800; font-size: 14px; text-shadow: 0 2px 8px rgba(0,0,0,.9); background: rgba(2,6,23,.6); border: 1px solid rgba(253,224,71,.35); border-radius: 999px; padding: 7px 18px; white-space: nowrap; }
+    .fm-progress { position: absolute; top: 12px; right: 16px; z-index: 6; color: #86efac; font-weight: 900; font-size: 15px; background: rgba(2,6,23,.65); border: 1px solid rgba(52,211,153,.5); border-radius: 999px; padding: 7px 16px; box-shadow: 0 0 16px rgba(52,211,153,.3); }
+
+    /* the 5 CAMOUFLAGED fog spots — subtle swirling dark mist, no neon rings/hand icons */
+    .fog-nodes { position: absolute; inset: 0; z-index: 5; }
+    .fog-node {
+      position: absolute; transform: translate(-50%,-50%); width: 84px; height: 84px; border: none; padding: 0;
+      cursor: zoom-in;  /* magnifying-glass style cursor rewards exploration */
+      border-radius: 50%; background: transparent; overflow: visible;
+    }
+    /* faint dark mist blended into the scene */
+    .fog-node .mist {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: radial-gradient(circle at 50% 50%, rgba(2,6,23,.62), rgba(15,23,42,.34) 55%, rgba(2,6,23,0) 78%);
+      filter: blur(2px); opacity: .7;
+      animation: mistSwirl 6s ease-in-out infinite; }
+    .fog-node .mist::before {
+      content: ""; position: absolute; inset: 8%; border-radius: 50%;
+      background: conic-gradient(from 0deg, rgba(30,27,75,.5), rgba(2,6,23,0) 40%, rgba(76,29,149,.32) 70%, rgba(2,6,23,0));
+      animation: mistRotate 9s linear infinite; }
+    @keyframes mistSwirl { 0%,100%{ opacity:.55; transform: scale(1);} 50%{ opacity:.8; transform: scale(1.08);} }
+    @keyframes mistRotate { 0%{ transform: rotate(0);} 100%{ transform: rotate(360deg);} }
+    /* hover/touch hint: a faint dark wisp brightens slightly (still subtle, no neon) */
+    .fog-node:hover .mist { opacity: 1; filter: blur(1px);
+      background: radial-gradient(circle at 50% 50%, rgba(15,23,42,.7), rgba(76,29,149,.3) 55%, rgba(2,6,23,0) 78%);
+      box-shadow: 0 0 18px 4px rgba(88,28,135,.35); animation: wispHint 1.2s ease-in-out infinite; }
+    @keyframes wispHint { 0%,100%{ transform: scale(1) rotate(-2deg);} 50%{ transform: scale(1.12) rotate(2deg);} }
+
+    /* a purified (completed) spot: golden sparkle + checkmark badge */
+    .fog-node.purified { cursor: default; pointer-events: none; }
+    .fog-node.purified .mist { display: none; }
+    .fog-node .badge { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; font-size: 42px; color: #fff; text-shadow: 0 0 10px #16a34a, 0 2px 6px rgba(0,0,0,.7); border-radius: 50%; background: radial-gradient(circle at 50% 42%, rgba(255,255,255,.95), rgba(253,224,71,.8) 45%, rgba(34,197,94,.4) 75%, transparent 82%); box-shadow: 0 0 30px 10px rgba(253,224,71,.6); }
+    .fog-node.purified .badge { display: flex; animation: badgePop .5s cubic-bezier(.2,.9,.3,1.4); }
+    .fog-node.purified.wrongdone .badge { background: radial-gradient(circle at 50% 42%, rgba(255,255,255,.9), rgba(148,163,184,.6) 50%, transparent 80%); box-shadow: 0 0 20px 6px rgba(148,163,184,.4); text-shadow: 0 2px 6px rgba(0,0,0,.7); }
+    @keyframes badgePop { 0%{ transform: scale(0) rotate(-20deg);} 100%{ transform: scale(1) rotate(0);} }
+
+    /* focus scratch card overlay */
+    .scratch-focus { position: absolute; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; background: rgba(2,6,23,.75); backdrop-filter: blur(4px); }
+    .scratch-focus-card { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 22px 26px 26px; border-radius: 22px;
+      background: rgba(2,6,23,.6); border: 1px solid rgba(139,92,246,.4); box-shadow: 0 0 40px rgba(88,28,135,.5);
+      animation: modalPop .3s cubic-bezier(.2,.9,.3,1.2); }
+    /* phantom monster shrouded over the scratch word */
+    .phantom-stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .phantom-hp { position: relative; width: 240px; height: 16px; border-radius: 999px; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.18); overflow: hidden; }
+    .phantom-hp-fill { height: 100%; width: 100%; border-radius: 999px; background: linear-gradient(90deg, #ff5b7f, #ff9bb2); transition: width .5s cubic-bezier(.2,.8,.2,1); }
+    .phantom-hp span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,.7); }
+    .phantom-monster { font-size: 86px; line-height: 1; filter: drop-shadow(0 6px 12px rgba(0,0,0,.6)) drop-shadow(0 0 16px rgba(139,92,246,.5)); animation: monsterBob 3s ease-in-out infinite; }
+    .phantom-monster.hit { animation: stageMonsterHit .5s ease; }
+    /* golden energy slash cutting through the monster on a correct answer */
+    .phantom-slash { position: absolute; top: 30px; left: 50%; width: 220px; height: 12px; border-radius: 999px; transform: translate(-50%,-50%) rotate(-38deg);
+      background: linear-gradient(90deg, transparent, #fff, var(--gold), #fff, transparent);
+      box-shadow: 0 0 26px 6px rgba(255,255,255,.9), 0 0 40px 10px rgba(255,213,74,.7);
+      pointer-events: none; z-index: 5; animation: phantomSlash .5s ease forwards; }
+    @keyframes phantomSlash { 0%{ transform: translate(-50%,-50%) rotate(-38deg) scaleX(0); opacity:0; } 35%{ opacity:1; } 70%{ transform: translate(-50%,-50%) rotate(-38deg) scaleX(1.2); opacity:1; } 100%{ transform: translate(-50%,-50%) rotate(-38deg) scaleX(1.35); opacity:0; } }
+    /* sparkling purify burst */
+    .purify-spark { position:absolute; width:8px; height:8px; border-radius:50%; background: radial-gradient(circle,#fff,#fde047 60%,transparent); box-shadow:0 0 10px 3px rgba(253,224,71,.9); pointer-events:none; z-index:6; animation: sparkFly .7s ease-out forwards; }
+    @keyframes sparkFly { 0%{ transform: translate(0,0) scale(1); opacity:1; } 100%{ transform: translate(var(--sx,0), var(--sy,-40px)) scale(.2); opacity:0; } }
+
+    .level-view { position: absolute; inset: 0; z-index: 2; }
+    .vfx-layer { position: absolute; inset: 0; pointer-events: none; z-index: 8; overflow: hidden; }
+
+    /* ---------- LEVEL 1 : bubbles ---------- */
+    .bubble-field { position: absolute; inset: 0; }
+    .bubble {
+      position: absolute; top: 45%;
+      width: 140px; height: 140px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; font-weight: 900; color: #fff; cursor: pointer;
+      background: radial-gradient(circle at 30% 28%, rgba(255,255,255,.9), rgba(120,170,255,.55) 45%, rgba(70,110,220,.4) 70%);
+      border: 2px solid rgba(255,255,255,.65);
+      box-shadow: 0 8px 24px rgba(80,120,255,.4), inset 0 0 24px rgba(255,255,255,.35);
+      text-shadow: 0 2px 4px rgba(0,0,0,.45); user-select: none;
+      transition: transform .1s ease;
+    }
+    .bubble { cursor: crosshair; }
+    .bubble:hover { transform: scale(1.06); }
+    .bubble.floating { animation: floatBob 3s ease-in-out infinite; }
+    @keyframes floatBob { 0%,100% { margin-top: 0;} 50% { margin-top: -22px;} }
+    .bubble.pop { animation: bubblePop .35s ease forwards; pointer-events: none; }
+    @keyframes bubblePop { 0% { transform: scale(1); opacity: 1;} 40% { transform: scale(1.35);} 100% { transform: scale(0); opacity: 0;} }
+    .wrong-shake { animation: wrongShake .4s ease; }
+    @keyframes wrongShake { 0%,100% { transform: translateX(0);} 20% { transform: translateX(-12px);} 40% { transform: translateX(12px);} 60% { transform: translateX(-8px);} 80% { transform: translateX(8px);} }
+
+    .slash {
+      position: absolute; width: 220px; height: 12px; border-radius: 999px;
+      background: linear-gradient(90deg, transparent, #fff, var(--gold), transparent);
+      box-shadow: 0 0 20px var(--gold); transform-origin: center; pointer-events: none;
+      animation: slashSwipe .35s ease forwards;
+    }
+    @keyframes slashSwipe {
+      0% { transform: translate(-50%,-50%) rotate(-45deg) scaleX(0); opacity: 0; }
+      30% { opacity: 1; }
+      60% { transform: translate(-50%,-50%) rotate(-45deg) scaleX(1.2); opacity: 1; }
+      100% { transform: translate(-50%,-50%) rotate(-45deg) scaleX(1.4); opacity: 0; }
+    }
+
+    /* ---------- LEVEL 2 : drag & drop ---------- */
+    /* Level 2 vertical layout: TOP 35% (cage) · MIDDLE 30% (assembly) · BOTTOM 35% (options) */
+    .dd-wrap { position: absolute; inset: 0; display: grid; grid-template-rows: 35% 30% 35%; z-index: 2; padding: 8px 16px 16px; }
+    .dd-zone { display: flex; align-items: center; justify-content: center; min-height: 0; }
+    .dd-zone-top { align-items: flex-start; }          /* cage sits in the upper viewport (drawn behind) */
+    .dd-zone-mid { flex-direction: column; }
+    .dd-zone-bottom { align-items: center; }
+
+    /* MIDDLE: unified glassmorphism assembly panel */
+    .dd-assembly {
+      position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px;
+      padding: 18px 30px; border-radius: 20px;
+      background: rgba(15,23,42,.85); backdrop-filter: blur(10px);
+      border: 1px solid rgba(52,211,153,.45);
+      box-shadow: 0 0 34px rgba(52,211,153,.28), inset 0 0 26px rgba(16,185,129,.12), 0 12px 30px rgba(0,0,0,.5);
+      animation: auraPulse 2.6s ease-in-out infinite;
+    }
+    @keyframes auraPulse { 0%,100% { box-shadow: 0 0 28px rgba(52,211,153,.22), inset 0 0 22px rgba(16,185,129,.1), 0 12px 30px rgba(0,0,0,.5);} 50% { box-shadow: 0 0 52px rgba(52,211,153,.42), inset 0 0 30px rgba(16,185,129,.2), 0 12px 30px rgba(0,0,0,.5);} }
+
+    /* header: overall target phrase, e.g. 目標詞語：[ ? ] 惜 */
+    .dd-prompt {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(2,44,34,.6); border: 1px solid rgba(52,211,153,.5);
+      border-radius: 999px; padding: 7px 20px; box-shadow: 0 0 18px rgba(52,211,153,.3);
+      font-weight: 800; text-shadow: 0 2px 6px rgba(0,0,0,.6);
+    }
+    .dd-prompt .hdr-label { color: #a7f3d0; font-size: 16px; }
+    .dd-prompt .hdr-word { color: #fff; font-size: 30px; font-weight: 900; }
+    .dd-prompt .hdr-slot { color: var(--gold); font-size: 28px; font-weight: 900; letter-spacing: 1px; }
+    .dd-context { display: none; }
+
+    .dd-target { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 66px; font-weight: 900; min-height: 96px; }
+    .dd-target.vertical { flex-direction: column; gap: 2px; }
+    .dd-target .fixed-part { color: #fff; text-shadow: 0 3px 8px rgba(0,0,0,.5); line-height: 1; }
+    .dd-slot {
+      width: 50px; height: 50px; border-radius: 12px;
+      border: 3px dashed var(--gold); background: rgba(255,213,74,.08);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 34px; color: var(--gold); line-height: 1;
+      transition: all .18s ease; animation: slotGlow 1.8s ease-in-out infinite;
+    }
+    @keyframes slotGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(255,213,74,.0);} 50% { box-shadow: 0 0 22px 3px rgba(255,213,74,.5);} }
+    .dd-slot.over { background: rgba(255,213,74,.25); transform: scale(1.06); }
+    .dd-slot.filled { border-style: solid; }
+    .dd-slot.correct { animation: goldenSnap .6s ease; }
+    @keyframes goldenSnap { 0% { transform: scale(1.4);} 50% { box-shadow: 0 0 40px 12px var(--gold);} 100% { transform: scale(1); box-shadow: none;} }
+
+    /* BOTTOM: option cards wrapped in a dark glass tray with cyan glow */
+    .dd-options-tray {
+      display: flex; align-items: center; gap: 16px; padding: 14px 20px; border-radius: 20px;
+      background: rgba(15,23,42,.85); backdrop-filter: blur(10px);
+      border: 1px solid rgba(34,211,238,.4);
+      box-shadow: 0 0 30px rgba(34,211,238,.22), 0 12px 30px rgba(0,0,0,.5);
+    }
+    .dd-options { display: flex; gap: 16px; }
+    .dd-option {
+      width: 96px; height: 96px; border-radius: 16px; cursor: grab; touch-action: none;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      background: rgba(15,23,42,.9); border: 2px solid rgba(34,211,238,.45);
+      font-size: 44px; font-weight: 900; color: #fff;
+      box-shadow: inset 0 0 16px rgba(34,211,238,.12), 0 6px 16px rgba(0,0,0,.45);
+      transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease; user-select: none;
+    }
+    .dd-option .opt-key { font-size: 13px; color: #67e8f9; font-weight: 800; }
+    .dd-option:hover { transform: translateY(-4px); border-color: var(--gold); box-shadow: 0 10px 24px rgba(255,213,74,.3), inset 0 0 16px rgba(255,213,74,.14); }
+    .dd-option.dragging { opacity: .4; cursor: grabbing; }
+    .dd-option.used { opacity: .25; pointer-events: none; }
+    .dd-option.selected { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold) inset; }
+    @media (max-width: 560px) { .dd-option { width: 74px; height: 74px; font-size: 34px; } .dd-options, .dd-options-tray { gap: 10px; } }
+
+    /* ---------- Projectiles / bursts ---------- */
+    .missile { position: absolute; width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle, #fff, var(--gold) 50%, var(--gold-deep)); box-shadow: 0 0 24px 8px rgba(255,213,74,.8); pointer-events: none; z-index: 9; }
+    .attack-particle { position: absolute; width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle, #fff, #6cf 50%, var(--accent)); box-shadow: 0 0 22px 6px rgba(108,140,255,.8); pointer-events: none; z-index: 9; }
+    .critical-burst { position: absolute; top: 40%; left: 50%; transform: translate(-50%,-50%); font-size: 52px; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px var(--gold-deep), 0 4px 12px rgba(0,0,0,.5); pointer-events: none; z-index: 12; animation: critPop .9s ease forwards; }
+    @keyframes critPop {
+      0% { transform: translate(-50%,-50%) scale(.2) rotate(-12deg); opacity: 0; }
+      30% { transform: translate(-50%,-50%) scale(1.3) rotate(6deg); opacity: 1; }
+      60% { transform: translate(-50%,-50%) scale(1) rotate(-3deg); opacity: 1; }
+      100% { transform: translate(-50%,-90%) scale(1) rotate(0); opacity: 0; }
+    }
+    .float-num { position: absolute; font-weight: 900; font-size: 26px; pointer-events: none; z-index: 11; animation: floatUp 1s ease forwards; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+    .float-num.plus { color: var(--gold); }
+    .float-num.minus { color: var(--monster); }
+    @keyframes floatUp { 0% { transform: translateX(-50%) translateY(0); opacity: 0;} 20% { opacity: 1;} 100% { transform: translateX(-50%) translateY(-70px); opacity: 0;} }
+
+    #game-screen.shake { animation: screenShake .35s ease; }
+    @keyframes screenShake { 0%,100% { transform: none;} 20% { transform: translate(-6px,3px);} 40% { transform: translate(6px,-3px);} 60% { transform: translate(-4px,2px);} 80% { transform: translate(4px,-2px);} }
+    /* stronger shake for dramatic Level 1 hit */
+    #game-screen.shake-hard { animation: screenShakeHard .5s ease; }
+    @keyframes screenShakeHard { 0%,100% { transform: none;} 15% { transform: translate(-14px,7px) rotate(-.6deg);} 30% { transform: translate(14px,-7px) rotate(.6deg);} 45% { transform: translate(-11px,5px);} 60% { transform: translate(9px,-4px);} 80% { transform: translate(-5px,2px);} }
+
+    /* ---------- Dramatic hit VFX ---------- */
+    /* big damage burst floating above the monster */
+    .dmg-burst {
+      position: absolute; z-index: 13; pointer-events: none; text-align: center;
+      transform: translate(-50%, -50%); animation: dmgBurst 1.3s cubic-bezier(.2,.7,.3,1) forwards;
+    }
+    .dmg-burst .hp { display: block; font-size: 46px; font-weight: 900; color: #ff3b3b; text-shadow: 0 0 18px rgba(255,0,0,.9), 0 4px 10px rgba(0,0,0,.6); -webkit-text-stroke: 2px #fff; }
+    .dmg-burst .sc { display: block; font-size: 26px; font-weight: 900; color: var(--gold); text-shadow: 0 0 12px var(--gold-deep), 0 3px 8px rgba(0,0,0,.6); margin-top: 2px; }
+    @keyframes dmgBurst {
+      0% { transform: translate(-50%,-50%) scale(.3); opacity: 0; }
+      25% { transform: translate(-50%,-70%) scale(1.25); opacity: 1; }
+      55% { transform: translate(-50%,-95%) scale(1); opacity: 1; }
+      100% { transform: translate(-50%,-160%) scale(.95); opacity: 0; }
+    }
+    /* full-screen sword slash burst overlay across the monster */
+    .slash-burst {
+      position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 60%; z-index: 12; pointer-events: none; overflow: visible;
+    }
+    .slash-burst i {
+      position: absolute; top: 50%; left: 0; right: 0; height: 10px; border-radius: 999px;
+      background: linear-gradient(90deg, transparent, #fff, var(--gold), #fff, transparent);
+      box-shadow: 0 0 26px 6px rgba(255,255,255,.9), 0 0 40px 10px rgba(255,213,74,.7);
+      transform-origin: center; animation: bigSlash .45s ease forwards;
+    }
+    .slash-burst i:nth-child(1) { transform: rotate(-38deg); }
+    .slash-burst i:nth-child(2) { transform: rotate(28deg); animation-delay: .08s; }
+    @keyframes bigSlash {
+      0% { transform: rotate(var(--r,-38deg)) scaleX(0); opacity: 0; }
+      35% { opacity: 1; }
+      70% { scaleX: 1; opacity: 1; }
+      100% { transform: scaleX(1.15); opacity: 0; }
+    }
+    .impact-flash { position: absolute; inset: 0; z-index: 11; pointer-events: none; background: radial-gradient(circle at 50% 28%, rgba(255,255,255,.85), rgba(255,80,80,.4) 30%, transparent 55%); opacity: 0; animation: impactFlash .4s ease forwards; }
+    @keyframes impactFlash { 0% { opacity: 0;} 25% { opacity: 1;} 100% { opacity: 0;} }
+
+    /* ---------- Level 2 energy beam (character -> tree monster) ---------- */
+    .energy-beam {
+      position: absolute; z-index: 9; pointer-events: none; height: 14px; border-radius: 999px;
+      transform-origin: 0 50%;
+      background: linear-gradient(90deg, rgba(255,213,74,0), #fff 20%, var(--gold) 55%, var(--gold-deep));
+      box-shadow: 0 0 22px 6px rgba(255,213,74,.85), 0 0 40px 10px rgba(255,157,0,.5);
+      animation: beamFire .5s ease forwards;
+    }
+    @keyframes beamFire { 0% { opacity: 0; filter: brightness(2);} 20% { opacity: 1;} 80% { opacity: 1;} 100% { opacity: 0;} }
+    .char-glow { animation: charGlow .6s ease; }
+    @keyframes charGlow { 0% { filter: none;} 40% { filter: drop-shadow(0 0 26px var(--gold)) drop-shadow(0 0 40px var(--gold-deep)); } 100% { filter: none;} }
+
+    .feedback-toast { position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.75); border: 1px solid rgba(255,255,255,.14); padding: 10px 22px; border-radius: 999px; font-weight: 800; font-size: 16px; opacity: 0; transition: opacity .25s ease; z-index: 10; pointer-events: none; }
+    .feedback-toast.show { opacity: 1; }
+    .feedback-toast.ok { color: var(--player); }
+    .feedback-toast.bad { color: var(--monster); }
+
+    /* ---------- Modal ---------- */
+    .modal-overlay { position: absolute; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; background: rgba(5,8,24,.72); backdrop-filter: blur(4px); }
+    .modal-overlay.active { display: flex; animation: fadeIn .25s ease; }
+    .modal-card { animation: modalPop .35s cubic-bezier(.2,.9,.3,1.2); }
+    @keyframes modalPop { 0% { transform: scale(.85); opacity: 0;} 100% { transform: scale(1); opacity: 1;} }
+
+    /* ---------- Summary table ---------- */
+    .table-scroll { max-height: 240px; overflow: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,.14); }
+    .analytics-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .analytics-table th, .analytics-table td { padding: 9px 10px; text-align: center; border-bottom: 1px solid rgba(255,255,255,.12); }
+    .analytics-table thead th { position: sticky; top: 0; background: #1e1b4b; color: var(--gold); }
+    .analytics-table td.yes { color: var(--player); font-weight: 800; }
+    .analytics-table td.no { color: var(--monster); font-weight: 800; }
+
+    /* custom scrollbar */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-thumb { background: rgba(168,139,250,.4); border-radius: 999px; }
+    ::-webkit-scrollbar-track { background: transparent; }
   </style>
 </head>
-<body>
+<body class="font-hk">
+  <div id="app">
 
-<!-- 步驟一：輸入學號/姓名 -->
-<div id="start-card" class="card">
-  <h1 style="color: #ff6b81;">⚔️ 吉伊卡哇正字討伐戰 ⚔️</h1>
-  <p style="color: #636E72;">小勇士，請輸入你的名字開始挑戰：</p>
-  <div class="input-group">
-    <input type="text" id="student-name" placeholder="例如：張小明 " required>
-  </div>
-  <button class="btn" style="background: #ff6b81; color: white;" onclick="goToRules()">下一步：看遊戲玩法 📜</button>
-</div>
+    <!-- global sound mute toggle -->
+    <button id="btn-mute" class="mute-btn" title="音效開關 / Sound" aria-label="toggle sound">
+      <i class="fa-solid fa-volume-high"></i>
+    </button>
 
-<!-- 步驟一.五：遊戲玩法說明 (初小學生友善版) -->
-<div id="rules-card" class="card" style="display: none;">
-  <h2 style="color: #ff6b81; margin-top: 0;">📜 討伐任務玩法指南</h2>
-  
-  <div class="rule-box">
-    <div class="rule-item">
-      <span class="rule-icon">🎯</span>
-      <span><b>選出正確正字：</b>選對答案可以攻擊錯字怪獸，讓怪獸扣血 (HP -10)！</span>
+    <!-- ============ START SCREEN ============ -->
+    <section id="start-screen" class="screen active">
+      <div class="panel-glass glow-border rounded-3xl p-8 sm:p-10 text-center w-[min(540px,94vw)]">
+        <div class="inline-block text-[12px] tracking-[2px] text-gold border border-gold rounded-full px-3 py-1 mb-4">
+          <i class="fa-solid fa-dragon mr-1"></i> RPG · 教育遊戲
+        </div>
+        <h1 class="game-title font-game text-5xl sm:text-6xl font-black leading-none">字靈勇者
+          <span class="block text-3xl sm:text-4xl mt-1">正字大對決</span>
+        </h1>
+        <p class="text-gold font-bold tracking-wide mt-3">Word Spirit Hero: Correct Character Battle</p>
+        <p class="text-slate-300 text-sm leading-relaxed mt-3 mb-6">斬妖除魔，糾正錯別字！專為小三學生設計的中文同音字與部首挑戰。</p>
+
+        <div class="text-left mb-5">
+          <label for="student-id" class="block text-xs text-slate-400 mb-1.5">
+            <i class="fa-solid fa-id-badge mr-1"></i> 學生編號 / Student ID
+          </label>
+          <input id="student-id" type="text" maxlength="20" placeholder="例如 S3-021"
+            class="w-full px-4 py-3 rounded-xl bg-black/25 border border-white/15 text-white text-base outline-none focus:ring-2 focus:ring-purple-400" />
+        </div>
+
+        <div class="flex gap-3 mb-3">
+          <div class="flex-1 bg-black/25 border border-white/15 rounded-2xl py-3 px-2 font-bold text-[15px]">
+            <span class="block text-[11px] text-gold mb-1">第一關</span>同音怪之塔 🗼
+          </div>
+          <div class="flex-1 bg-black/25 border border-white/15 rounded-2xl py-3 px-2 font-bold text-[15px]">
+            <span class="block text-[11px] text-gold mb-1">第二關</span>微觀地牢 🏰
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-6">
+          <div class="bg-black/25 border border-white/15 rounded-2xl py-3 px-2 font-bold text-[15px]">
+            <span class="block text-[11px] text-gold mb-1">第三關</span>雙重幻象城 ⚔️
+          </div>
+          <div class="bg-black/25 border border-white/15 rounded-2xl py-3 px-2 font-bold text-[15px]">
+            <span class="block text-[11px] text-gold mb-1">第四關</span>幻影怪森林 🌲
+          </div>
+        </div>
+
+        <button id="btn-start" class="btn-primary rounded-full px-8 py-4 text-lg w-full">
+          <i class="fa-solid fa-khanda mr-2"></i> 開始冒險
+        </button>
+        <p class="text-slate-400 text-xs mt-4">每題限時 30 秒 · 答錯可重試一次 · 完成後可下載成績</p>
+      </div>
+    </section>
+
+    <!-- ============ GAME SCREEN ============ -->
+    <section id="game-screen" class="screen !items-stretch !justify-start !p-0 flex-col">
+      <!-- HUD -->
+      <header class="grid grid-cols-1 md:grid-cols-[1fr_1.15fr_1fr] gap-3 items-center px-5 py-3.5 bg-black/30 border-b border-white/10 z-[5]">
+        <!-- player -->
+        <div class="flex items-center gap-3">
+          <div class="portrait player-portrait">🦸</div>
+          <div class="flex-1 min-w-[120px]">
+            <div class="text-xs text-slate-400 mb-1"><i class="fa-solid fa-heart text-emerald-400 mr-1"></i>勇者 HP</div>
+            <div class="bar-track"><div id="player-hp-fill" class="bar-fill player-hp"></div></div>
+            <div class="text-[13px] mt-1 font-bold">分數 <span id="score-value" class="text-gold text-base">0</span></div>
+          </div>
+        </div>
+        <!-- center -->
+        <div class="text-center">
+          <div class="flex justify-between text-[13px] mb-1.5">
+            <span id="level-name" class="font-bold">第一關 · 同音怪之塔</span>
+            <span id="question-progress" class="text-gold font-extrabold">Q 1 / 5</span>
+          </div>
+          <div id="timer-wrap" class="timer-wrap">
+            <div id="timer-fill" class="timer-fill"></div>
+            <span id="timer-text" class="timer-text">30s</span>
+          </div>
+        </div>
+        <!-- monster -->
+        <div class="flex items-center gap-3 md:justify-end">
+          <div class="flex-1 min-w-[120px] md:text-right">
+            <div class="text-xs text-slate-400 mb-1"><i class="fa-solid fa-skull text-rose-400 mr-1"></i>怪獸 HP</div>
+            <div class="bar-track"><div id="monster-hp-fill" class="bar-fill monster-hp"></div></div>
+            <div class="text-[13px] mt-1 font-bold" id="monster-hp-pct">100%</div>
+          </div>
+          <div class="portrait monster-portrait" id="monster-portrait">👾</div>
+        </div>
+      </header>
+
+      <!-- Stage -->
+      <main class="flex-1 flex items-center justify-center p-4 overflow-hidden">
+        <div id="battle-field" class="battle-field w-full h-full max-w-6xl relative">
+          <!-- immersive per-level background -->
+          <div id="atmosphere" class="atmosphere atmo-tower"></div>
+
+          <!-- cartoon forest scene (only shown in Level 2) -->
+          <div id="forest-scene" class="forest-scene hidden">
+            <div class="sun"></div>
+            <div class="cloud" style="top:12%; left:8%; width:90px; height:30px;"></div>
+            <div class="cloud" style="top:22%; left:40%; width:70px; height:24px; animation-delay:-12s;"></div>
+            <div class="canopy c1"></div>
+            <!-- decorative trees pushed to the far LEFT and RIGHT edges so the centre stays clear -->
+            <div class="tree" style="left:-1%; width:120px; height:78%;"><div class="leaves"></div><div class="trunk"></div></div>
+            <div class="tree" style="left:8%; width:96px; height:60%;"><div class="leaves"></div><div class="trunk"></div></div>
+            <div class="tree" style="right:-1%; left:auto; width:130px; height:82%;"><div class="leaves"></div><div class="trunk"></div></div>
+            <div class="tree" style="right:8%; left:auto; width:96px; height:60%;"><div class="leaves"></div><div class="trunk"></div></div>
+            <!-- host canopy only (NO central trunk) — the monster perches on this at the top -->
+            <div class="host-canopy"><div class="leaves"></div><div class="branch"></div></div>
+          </div>
+
+          <!-- castle towers + lightning flash (Level 3) -->
+          <div id="castle-towers" class="castle-towers hidden"></div>
+          <div id="lightning-flash" class="lightning-flash"></div>
+
+          <!-- Level 1: full gothic castle tower rising in the centre; monster stands atop it -->
+          <div id="castle-balcony" class="castle-balcony hidden">
+            <svg class="castle-svg" viewBox="0 0 480 560" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+              <defs>
+                <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#7b8494"/><stop offset="55%" stop-color="#4b5563"/><stop offset="100%" stop-color="#2b3444"/>
+                </linearGradient>
+                <linearGradient id="stoneDark" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#4b5563"/><stop offset="100%" stop-color="#1f2733"/>
+                </linearGradient>
+              </defs>
+              <!-- flanking side towers -->
+              <rect x="40"  y="250" width="76" height="310" fill="url(#stoneDark)"/>
+              <rect x="364" y="250" width="76" height="310" fill="url(#stoneDark)"/>
+              <path d="M36 250 h84 v-20 h-14 v-16 h-14 v16 h-14 v-16 h-14 v16 h-14z" fill="#374151"/>
+              <path d="M360 250 h84 v-20 h-14 v-16 h-14 v16 h-14 v-16 h-14 v16 h-14z" fill="#374151"/>
+              <!-- central keep -->
+              <rect x="150" y="150" width="180" height="410" fill="url(#stone)"/>
+              <!-- crenellations on the keep -->
+              <path d="M146 150 h188 v-22 h-24 v-16 h-24 v16 h-22 v-16 h-24 v16 h-22 v-16 h-24 v16 h-24z" fill="#5b6472"/>
+              <!-- big gate + windows -->
+              <path d="M212 560 v-120 a28 28 0 0 1 56 0 v120z" fill="#0b0f19"/>
+              <rect x="180" y="300" width="26" height="46" rx="13" fill="#0b0f19"/>
+              <rect x="274" y="300" width="26" height="46" rx="13" fill="#0b0f19"/>
+              <circle cx="240" cy="220" r="22" fill="#0b0f19"/>
+              <circle cx="240" cy="220" r="22" fill="none" stroke="#5b6472" stroke-width="4"/>
+              <!-- brick texture lines -->
+              <g stroke="#2b3444" stroke-width="2" opacity=".5">
+                <path d="M150 200 h180 M150 250 h180 M150 300 h180 M150 350 h180 M150 400 h180 M150 460 h180 M150 520 h180"/>
+              </g>
+            </svg>
+            <div class="torch left"><span class="flame"></span></div>
+            <div class="torch right"><span class="flame"></span></div>
+          </div>
+
+          <!-- Level 2: full dungeon with descending staircase + caged monster at the bottom -->
+          <div id="dungeon-cell" class="dungeon-cell hidden">
+            <div class="dungeon-wall"></div>
+            <!-- illustrated stone archway framing the vault -->
+            <div class="dungeon-arch"></div>
+            <!-- centered stone staircase descending into the vault -->
+            <div class="dungeon-stairs">
+              <span style="--i:0"></span><span style="--i:1"></span><span style="--i:2"></span>
+              <span style="--i:3"></span><span style="--i:4"></span><span style="--i:5"></span>
+              <span style="--i:6"></span>
+            </div>
+            <div class="chain c1"></div>
+            <div class="chain c2"></div>
+            <div class="d-torch left"><span class="flame"></span></div>
+            <div class="d-torch right"><span class="flame"></span></div>
+
+            <!-- iron cage that FULLY encloses the monster at the foot of the stairs -->
+            <div class="iron-cage">
+              <!-- back frame (BEHIND the monster) -->
+              <div class="cage-back"></div>
+              <!-- the trapped red monster sprite, sized to sit 100% inside the cage -->
+              <div class="caged-monster" id="caged-monster">👹</div>
+              <!-- front furniture (IN FRONT of the monster) -->
+              <div class="cage-top"></div>
+              <div class="cage-bars">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+              </div>
+              <div class="cage-ring r1"></div>
+              <div class="cage-ring r2"></div>
+              <div class="cage-base"></div>
+              <div class="cage-lock"><i class="fa-solid fa-lock"></i></div>
+            </div>
+          </div>
+
+          <!-- stage monster (boss in L1 / perched on tree in L2) -->
+          <div id="stage-monster" class="stage-monster boss">
+            <div class="monster-aura"></div>
+            <div class="spikes"><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="arc"></div>
+            <div class="bolt left">⚡</div>
+            <div class="bolt right">⚡</div>
+            <div class="monster-body" id="stage-monster-body">👾</div>
+            <div class="eyes"><span></span><span></span></div>
+            <div class="monster-mouth"></div>
+          </div>
+
+          <div id="vfx-layer" class="vfx-layer"></div>
+
+          <!-- Level 1 -->
+          <div id="level1-view" class="level-view">
+            <div id="bubble-field" class="bubble-field"></div>
+          </div>
+
+          <!-- Level 2 -->
+          <div id="level2-view" class="level-view hidden">
+            <div class="dd-wrap">
+              <!-- TOP ZONE (35%): caged monster is drawn behind (in #dungeon-cell), enlarged 150% -->
+              <div class="dd-zone dd-zone-top"></div>
+
+              <!-- MIDDLE ZONE (30%): unified glassmorphism assembly panel -->
+              <div class="dd-zone dd-zone-mid">
+                <div class="dd-assembly">
+                  <div class="text-emerald-200/80 text-xs"><i class="fa-solid fa-hand-pointer mr-1"></i>把正確部首拖進空格</div>
+                  <div id="dd-prompt" class="dd-prompt"></div>
+                  <div id="dd-target" class="dd-target"></div>
+                  <div id="dd-context" class="dd-context hidden"></div>
+                </div>
+              </div>
+
+              <!-- BOTTOM ZONE (35%): radical option cards in a glass tray -->
+              <div class="dd-zone dd-zone-bottom">
+                <div class="dd-options-tray">
+                  <div id="dd-options" class="dd-options"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Level 3 : drag-to-connect line + shield reflect -->
+          <div id="level3-view" class="level-view hidden">
+            <div class="shield-wrap">
+              <div id="shield-prompt" class="shield-prompt"></div>
+              <div id="connect-arena" class="connect-arena">
+                <!-- SVG layer for the drawn connection line -->
+                <svg id="connect-svg" class="connect-svg" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#ffd54a"/>
+                      <stop offset="100%" stop-color="#ff9d00"/>
+                    </linearGradient>
+                  </defs>
+                  <line id="connect-line" x1="0" y1="0" x2="0" y2="0" style="display:none"></line>
+                </svg>
+                <!-- shields (positioned by JS) -->
+                <div id="shield-options" class="shield-options-free"></div>
+                <!-- hero node at bottom-centre -->
+                <div id="hero-node" class="hero-node">
+                  <div class="lightning-charge" id="lightning-charge"></div>
+                  <span class="hero-face">🦸</span>
+                  <span class="node-dot"></span>
+                </div>
+                <div class="connect-tip"><i class="fa-solid fa-arrow-pointer mr-1"></i>從勇者拉一條線連到正確的護盾！</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Level 4 : night forest exploration + scratch to reveal -->
+          <div id="level4-view" class="level-view hidden">
+            <!-- ===== Dense spooky night forest search map ===== -->
+            <div id="forest-map" class="forest-map">
+              <!-- rich multi-layer illustrated forest scene -->
+              <svg class="forest-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <defs>
+                  <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#fff7cc"/><stop offset="45%" stop-color="#fde047"/>
+                    <stop offset="100%" stop-color="#fde047" stop-opacity="0"/>
+                  </radialGradient>
+                  <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#fef9c3" stop-opacity=".22"/>
+                    <stop offset="100%" stop-color="#fef9c3" stop-opacity="0"/>
+                  </linearGradient>
+                  <linearGradient id="trunkG" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#0b0f19"/><stop offset="50%" stop-color="#3f2a17"/><stop offset="100%" stop-color="#0b0f19"/>
+                  </linearGradient>
+                  <radialGradient id="mush" cx="50%" cy="40%" r="60%">
+                    <stop offset="0%" stop-color="#fbcfe8"/><stop offset="55%" stop-color="#ec4899"/><stop offset="100%" stop-color="#831843"/>
+                  </radialGradient>
+                </defs>
+
+                <!-- moon + glow -->
+                <circle cx="820" cy="110" r="120" fill="url(#moonGlow)"/>
+                <path d="M842 60 a58 58 0 1 0 0 100 a44 44 0 1 1 0-100z" fill="#fef9c3"/>
+
+                <!-- moonlight beams filtering through branches -->
+                <polygon class="beam" points="760,40 900,40 1020,600 640,600" fill="url(#beam)"/>
+                <polygon class="beam beam2" points="560,60 660,60 720,600 440,600" fill="url(#beam)"/>
+
+                <!-- BACKGROUND: silhouetted purple tree layer (depth) -->
+                <g fill="#2e1065" opacity=".55">
+                  <polygon points="60,600 60,340 30,300 60,300 60,240 100,300 130,300 100,340 100,600"/>
+                  <polygon points="230,600 230,380 205,350 235,350 235,300 275,350 305,350 275,380 275,600"/>
+                  <polygon points="470,600 470,360 445,330 475,330 475,285 515,330 545,330 515,360 515,600"/>
+                  <polygon points="690,600 690,400 670,375 695,375 695,335 735,375 760,375 735,400 735,600"/>
+                  <polygon points="905,600 905,370 885,345 908,345 908,305 945,345 970,345 945,370 945,600"/>
+                </g>
+
+                <!-- MIDGROUND ground + entangled roots -->
+                <path d="M0,560 Q250,520 500,552 T1000,548 L1000,600 L0,600 Z" fill="#0b1120"/>
+                <g stroke="#1e293b" stroke-width="6" fill="none" opacity=".8">
+                  <path d="M120,560 q40,-30 90,-10 q30,12 70,4"/>
+                  <path d="M760,560 q50,-24 110,-6 q30,10 70,2"/>
+                </g>
+
+                <!-- MIDGROUND: big left oak with textured trunk + hollow -->
+                <g>
+                  <rect x="120" y="250" width="70" height="320" rx="14" fill="url(#trunkG)"/>
+                  <path d="M155,255 q-70,-40 -110,-120 M155,265 q60,-46 128,-70" stroke="#3f2a17" stroke-width="16" fill="none" stroke-linecap="round"/>
+                  <ellipse cx="150" cy="140" rx="150" ry="96" fill="#052e16"/>
+                  <ellipse cx="230" cy="170" rx="110" ry="72" fill="#14532d"/>
+                  <!-- dark hollow in the trunk -->
+                  <ellipse cx="152" cy="360" rx="26" ry="40" fill="#05070d"/>
+                  <ellipse cx="152" cy="360" rx="15" ry="27" fill="#000"/>
+                </g>
+
+                <!-- MIDGROUND: right pine cluster + canopy -->
+                <g>
+                  <rect x="820" y="300" width="60" height="270" rx="12" fill="url(#trunkG)"/>
+                  <ellipse cx="850" cy="210" rx="150" ry="100" fill="#052e16"/>
+                  <ellipse cx="780" cy="250" rx="100" ry="66" fill="#14532d"/>
+                </g>
+
+                <!-- twisted upper-centre branch with hanging vines -->
+                <path d="M360,120 q160,40 320,10" stroke="#3f2a17" stroke-width="14" fill="none" stroke-linecap="round"/>
+                <g stroke="#166534" stroke-width="4" opacity=".85">
+                  <path d="M430,132 q-6,40 4,72"/><path d="M520,140 q-4,50 6,90"/><path d="M610,132 q-6,44 2,78"/>
+                </g>
+
+                <!-- FOREGROUND frame: crooked dark trees + hanging moss on edges -->
+                <g fill="#05070d">
+                  <path d="M0,600 L0,60 Q60,120 40,240 Q80,340 30,600 Z"/>
+                  <path d="M1000,600 L1000,80 Q940,140 966,260 Q930,360 985,600 Z"/>
+                </g>
+                <path d="M0,70 Q120,60 240,120" stroke="#05070d" stroke-width="30" fill="none"/>
+                <g stroke="#166534" stroke-width="3" opacity=".6">
+                  <path d="M60,96 q2,40 -6,70"/><path d="M120,110 q4,44 -4,80"/><path d="M180,124 q3,40 -5,66"/>
+                </g>
+
+                <!-- glowing mushrooms (bottom right) + rocks -->
+                <g>
+                  <ellipse cx="700" cy="580" rx="90" ry="26" fill="#0f172a"/>
+                  <rect x="686" y="548" width="10" height="34" rx="4" fill="#e2e8f0" opacity=".85"/>
+                  <ellipse cx="691" cy="548" rx="24" ry="14" fill="url(#mush)"/>
+                  <rect x="722" y="556" width="8" height="26" rx="4" fill="#e2e8f0" opacity=".8"/>
+                  <ellipse cx="726" cy="556" rx="17" ry="10" fill="url(#mush)"/>
+                </g>
+                <ellipse cx="180" cy="585" rx="70" ry="24" fill="#1e293b"/>
+              </svg>
+
+              <!-- floating fireflies -->
+              <div class="fireflies">
+                <span style="left:22%;top:40%"></span><span style="left:38%;top:64%"></span>
+                <span style="left:58%;top:34%"></span><span style="left:73%;top:58%"></span>
+                <span style="left:48%;top:78%"></span><span style="left:86%;top:44%"></span>
+              </div>
+
+              <!-- explore hint + progress badge -->
+              <div class="fm-hint"><i class="fa-solid fa-magnifying-glass mr-1"></i>在森林中仔細尋找 5 團隱藏的黑霧，點擊淨化錯別字！</div>
+              <div id="fm-progress" class="fm-progress"><i class="fa-solid fa-broom mr-1"></i><span id="fm-progress-count">0</span> / 5 已淨化</div>
+
+              <!-- 5 camouflaged fog spots injected here by JS -->
+              <div id="fog-nodes" class="fog-nodes"></div>
+            </div>
+
+            <!-- ===== Focus scratch card overlay (opens on clicking a fog node) ===== -->
+            <div id="scratch-focus" class="scratch-focus hidden">
+              <div class="scratch-focus-card">
+                <!-- Forest Phantom monster shrouded in fog, with the hidden word under a scratch canvas -->
+                <div class="phantom-stage" id="phantom-stage">
+                  <!-- monster HP bar for this encounter -->
+                  <div class="phantom-hp"><div id="phantom-hp-fill" class="phantom-hp-fill"></div><span id="phantom-hp-pct">100%</span></div>
+                  <div class="phantom-monster" id="phantom-monster">👺</div>
+                  <div class="scratch-hint" id="scratch-hint"><i class="fa-solid fa-hand-sparkles mr-1"></i>擦去黑霧，揭開怪獸身上的詞語！</div>
+                  <div class="scratch-stage">
+                    <div id="scratch-word" class="scratch-word"></div>
+                    <canvas id="scratch-canvas" class="scratch-canvas" width="360" height="200"></canvas>
+                  </div>
+                </div>
+                <div id="scratch-actions" class="scratch-actions hidden">
+                  <button id="btn-keep" class="btn-keep"><i class="fa-solid fa-circle-check mr-1"></i>保留通過 / Keep</button>
+                  <button id="btn-erase" class="btn-erase"><i class="fa-solid fa-broom mr-1"></i>淨化擦掉 / Purify &amp; Erase</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="feedback-toast" class="feedback-toast"></div>
+        </div>
+      </main>
+    </section>
+
+    <!-- ============ HOW-TO-PLAY MODAL ============ -->
+    <div id="howto-modal" class="modal-overlay">
+      <div class="modal-card panel-glass glow-border rounded-3xl p-8 text-center w-[min(480px,93vw)]">
+        <div class="text-5xl mb-2" id="howto-icon">🗼</div>
+        <div class="inline-block text-[11px] tracking-[2px] text-gold border border-gold rounded-full px-3 py-1 mb-2" id="howto-badge">第一關</div>
+        <h2 class="text-gold text-2xl font-extrabold mb-1" id="howto-title">遊戲玩法說明</h2>
+        <p class="text-slate-300 text-sm mb-4" id="howto-subtitle"></p>
+        <ul id="howto-rules" class="text-left text-[15px] leading-relaxed space-y-2 mb-6 mx-auto max-w-sm"></ul>
+        <button id="btn-howto-start" class="btn-primary rounded-full px-8 py-4 text-lg w-full">
+          <i class="fa-solid fa-play mr-2"></i> <span id="howto-start-label">開始挑戰</span>
+        </button>
+      </div>
     </div>
-    <div class="rule-item">
-      <span class="rule-icon">🛡️</span>
-      <span><b>小心怪獸反擊：</b>答錯會被怪獸攻擊，還會被扣 5 分喔！</span>
-    </div>
-    <div class="rule-item">
-      <span class="rule-icon">🏆</span>
-      <span><b>拿到 100 分：</b>打倒怪獸並拿滿 100 分，就能獲得「一級正字達人資格證」！</span>
-    </div>
-  </div>
 
-  <button class="btn" style="background: #00b894; color: white;" onclick="startGame()">我準備好了，開始討伐！ ⚔️</button>
-</div>
-
-<!-- 步驟二：遊戲核心介面 -->
-<div id="game-card" class="card" style="display: none;">
-  <div class="status-container">
-    <div>分數：<span id="score" style="color: #d63031; font-size: 20px;">50</span> 分</div>
-    <div style="width: 50%;">
-      <div style="font-size: 12px; margin-bottom: 2px;">錯字怪獸 HP</div>
-      <div class="hp-bar-bg"><div id="hp-fill" class="hp-bar-fill"></div></div>
-    </div>
-  </div>
-  
-  <div id="quiz-container">
-    <h2 id="question-text" style="color: #2d3436; font-size: 20px;">題目載入中...</h2>
-    <div id="options"></div>
-  </div>
-</div>
-
-<!-- 答對 / 答錯 回饋彈窗 -->
-<div id="feedback-modal" class="modal">
-  <div class="modal-content">
-    <h2 id="feedback-title"></h2>
-    <img id="feedback-img" src="" alt="提示圖片">
-    <br>
-    <button class="close-btn" onclick="closeModal()">下一題</button>
-  </div>
-</div>
-
-<!-- 步驟三：通關結算畫面 (100分解鎖資格證) -->
-<div id="cert-modal" class="modal">
-  <div class="modal-content" style="border: 4px solid #ffd700; background: #fffdf0; max-width: 450px;">
-    <h1 style="color: #d63031; font-size: 26px; margin-bottom: 5px;">🎉 討伐成功！ 🎉</h1>
-    
-    <!-- 一級正字達人資格證圖片區 -->
-    <div class="cert-img-container">
-      <img id="cert-img" src="" alt="一級正字達人資格證">
+    <!-- ============ HINT MODAL ============ -->
+    <div id="hint-modal" class="modal-overlay">
+      <div class="modal-card panel-glass glow-border rounded-3xl p-8 text-center w-[min(440px,92vw)]">
+        <div class="text-5xl mb-2" id="hint-icon">📖</div>
+        <h2 class="text-gold text-xl font-extrabold mb-3.5"><i class="fa-solid fa-book-open mr-1"></i>字源提示 · Hint</h2>
+        <p id="hint-body" class="text-base leading-relaxed mb-4"></p>
+        <div id="hint-countdown" class="text-slate-400 text-sm mb-4">重試倒數：3</div>
+        <button id="btn-hint-retry" class="btn-primary rounded-full px-6 py-3 w-full disabled:opacity-50">
+          <i class="fa-solid fa-rotate-right mr-1"></i> 再試一次
+        </button>
+      </div>
     </div>
 
-    <!-- AI 動態診斷報告 -->
-    <div class="ai-box">
-      <strong>🤖 小八 AI 診斷評語：</strong><br>
-      <span id="ai-feedback-text">正在分析答對率與弱點...</span>
-    </div>
+    <!-- ============ SUMMARY SCREEN ============ -->
+    <section id="summary-screen" class="screen">
+      <div class="panel-glass glow-border rounded-3xl p-7 sm:p-8 text-center w-[min(760px,96vw)] max-h-[94vh] overflow-y-auto">
+        <div id="summary-result-icon" class="text-6xl">🏆</div>
+        <h1 id="summary-title" class="text-3xl sm:text-4xl font-black mt-1.5 mb-5">冒險完成！</h1>
 
-    <button class="close-btn" style="background: #00b894; margin-top: 20px;" onclick="location.reload()">重新挑戰</button>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mb-6">
+          <div class="bg-black/25 border border-white/15 rounded-2xl py-4 px-2">
+            <div class="text-2xl font-black text-gold" id="sum-score">0</div>
+            <div class="text-xs text-slate-400 mt-1">總分</div>
+          </div>
+          <div class="bg-black/25 border border-white/15 rounded-2xl py-4 px-2">
+            <div class="text-2xl font-black text-gold" id="sum-correct">0</div>
+            <div class="text-xs text-slate-400 mt-1">首答正確</div>
+          </div>
+          <div class="bg-black/25 border border-white/15 rounded-2xl py-4 px-2">
+            <div class="text-2xl font-black text-gold" id="sum-accuracy">0%</div>
+            <div class="text-xs text-slate-400 mt-1">最終正確率</div>
+          </div>
+          <div class="bg-black/25 border border-white/15 rounded-2xl py-4 px-2">
+            <div class="text-2xl font-black text-gold" id="sum-avgtime">0s</div>
+            <div class="text-xs text-slate-400 mt-1">平均用時</div>
+          </div>
+        </div>
+
+        <div class="text-left mb-6">
+          <h3 class="text-base font-bold mb-3"><i class="fa-solid fa-chalkboard-user mr-1 text-purple-300"></i>教師數據面板 · Teacher Dashboard</h3>
+          <div class="table-scroll">
+            <table class="analytics-table">
+              <thead>
+                <tr><th>Level</th><th>Q_ID</th><th>1st ✔</th><th>Final ✔</th><th>Time(s)</th><th>Selected</th></tr>
+              </thead>
+              <tbody id="analytics-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="flex gap-3.5 justify-center flex-wrap">
+          <button id="btn-download-csv" class="btn-primary rounded-full px-8 py-4 text-lg">
+            <i class="fa-solid fa-file-csv mr-2"></i> 下載分析數據 (CSV)
+          </button>
+          <button id="btn-replay" class="btn-ghost rounded-full px-8 py-4 text-lg">
+            <i class="fa-solid fa-arrows-rotate mr-2"></i> 再玩一次
+          </button>
+        </div>
+      </div>
+    </section>
+
   </div>
-</div>
 
-<script>
-  // 1. 圖片路徑設定
-  const CHIIKAWA_IMG = "https://i.postimg.cc/15L6KgrW/Correct-jpg.jpg";
-  const HACHIWARE_IMG = "https://i.postimg.cc/sDtSJB48/wrong-jpg.jpg";
-  const CERTIFICATE_IMG = "https://i.postimg.cc/X7TFgZkt/final-jpg.jpg";
+  <script>
+  /* ============================================================
+     字靈勇者：正字大對決 | Word Spirit Hero — embedded game.js
+     ============================================================ */
+  (function () {
+    "use strict";
 
-  // 2. Google Apps Script 部署 URL
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbwKAAfRohWEI2R1RGMrJjcAHUqGc7vRcYrUn3-Xgc6UyoYQUGPhIEM6M0KTxCEC8ahCEw/exec";
+    /* ============================================================
+       SFX — Web Audio API sound engine (all synthesized, no assets)
+       ============================================================ */
+    const SFX = {
+      ctx: null, master: null, sfxBus: null, bgmBus: null,
+      bgmTimer: null, bgmStep: 0, bgmInterval: 900, urgent: false, muted: false, playing: false,
+      init() {
+        if (this.ctx) return;
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        this.ctx = new AC();
+        this.master = this.ctx.createGain(); this.master.gain.value = 0.9; this.master.connect(this.ctx.destination);
+        this.sfxBus = this.ctx.createGain(); this.sfxBus.gain.value = 0.5; this.sfxBus.connect(this.master);
+        this.bgmBus = this.ctx.createGain(); this.bgmBus.gain.value = 0.32; this.bgmBus.connect(this.master);
+      },
+      resume() { if (this.ctx && this.ctx.state === "suspended") this.ctx.resume(); },
+      // low-level tone helper (routes to a bus: sfx or bgm)
+      tone(freq, t0, dur, type, peak, endFreq, bus) {
+        if (!this.ctx) return;
+        const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+        o.type = type || "sine";
+        o.frequency.setValueAtTime(freq, t0);
+        if (endFreq) o.frequency.exponentialRampToValueAtTime(Math.max(1, endFreq), t0 + dur);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(peak || 0.3, t0 + Math.min(0.03, dur * 0.3));
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        o.connect(g); g.connect(bus || this.sfxBus);
+        o.start(t0); o.stop(t0 + dur + 0.02);
+      },
+      noise(t0, dur, filterType, freq, peak, bus) {
+        if (!this.ctx) return;
+        const len = Math.max(1, Math.floor(this.ctx.sampleRate * dur));
+        const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+        const src = this.ctx.createBufferSource(); src.buffer = buf;
+        const flt = this.ctx.createBiquadFilter(); flt.type = filterType || "bandpass"; flt.frequency.value = freq || 2000; flt.Q.value = 0.8;
+        const g = this.ctx.createGain(); g.gain.value = peak || 0.25;
+        src.connect(flt); flt.connect(g); g.connect(bus || this.sfxBus);
+        src.start(t0); src.stop(t0 + dur);
+      },
+      /* ---------- action sound effects ---------- */
+      play(name) {
+        this.init(); if (!this.ctx) return; this.resume();
+        const t = this.ctx.currentTime;
+        switch (name) {
+          case "slash": // sword swing slash
+            this.noise(t, 0.20, "highpass", 3200, 0.34);
+            this.tone(1500, t, 0.16, "sawtooth", 0.2, 480);
+            break;
+          case "snap": // golden magic chime burst
+            this.tone(784, t, 0.10, "triangle", 0.3, 1400);
+            this.tone(1319, t + 0.05, 0.24, "sine", 0.32, 2200);
+            this.tone(1976, t + 0.10, 0.22, "sine", 0.18);
+            break;
+          case "lightning": // electric thunder zap
+            this.noise(t, 0.30, "bandpass", 3200, 0.36);
+            this.tone(2400, t, 0.26, "square", 0.18, 300);
+            this.tone(150, t + 0.03, 0.34, "sawtooth", 0.24, 55);
+            break;
+          case "impact": // deep monster-hit thump
+            this.tone(180, t, 0.22, "sine", 0.5, 55);
+            this.noise(t, 0.14, "lowpass", 400, 0.3);
+            break;
+          case "purify": // airy purify sparkle
+            [880, 1175, 1568, 2093].forEach((f, i) => this.tone(f, t + i * 0.05, 0.22, "sine", 0.24));
+            break;
+          case "wrong": // dull descending buzz
+            this.tone(220, t, 0.3, "sawtooth", 0.26, 90);
+            break;
+          case "tick": // sharp rhythmic clock tick (滴答)
+            this.tone(2000, t, 0.05, "square", 0.35, 1400);
+            this.noise(t, 0.03, "highpass", 5000, 0.2);
+            break;
+          case "victory": // heroic level-clear fanfare chime
+            [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, t + i * 0.13, 0.42, "triangle", 0.32));
+            this.tone(1047, t + 0.66, 0.8, "sine", 0.26);
+            break;
+        }
+      },
+      /* ---------- procedural spooky gothic BGM ---------- */
+      // A-minor: pulsing bass, low drone, and eerie arpeggio; one note per step.
+      _bass: [110.00, 110.00, 130.81, 87.31],          // A2 A2 C3 F2 — brooding minor movement
+      _arp:  [220.00, 261.63, 329.63, 261.63, 220.00, 196.00, 174.61, 196.00], // A3 C4 E4 ... eerie
+      startBgm(urgent) {
+        this.init(); if (!this.ctx) return; this.resume();
+        this.playing = true;
+        this.setUrgent(!!urgent, true);
+        if (this.bgmTimer) return;
+        this.bgmStep = 0;
+        const tickLoop = () => {
+          if (!this.ctx || !this.playing) return;
+          const t = this.ctx.currentTime, s = this.bgmStep;
+          // low ambient drone (sustained, every 4 steps)
+          if (s % 4 === 0) this.tone(55, t, this.bgmInterval / 1000 * 3.6, "sine", 0.16, null, this.bgmBus);
+          // pulsing minor bassline
+          const bass = this._bass[Math.floor(s / 2) % this._bass.length];
+          this.tone(bass, t, this.bgmInterval / 1000 * 0.9, "triangle", 0.22, null, this.bgmBus);
+          // spooky arpeggio on top
+          const arp = this._arp[s % this._arp.length];
+          this.tone(arp, t + this.bgmInterval / 2000, this.bgmInterval / 1000 * 0.5, "square", this.urgent ? 0.12 : 0.08, null, this.bgmBus);
+          this.bgmStep++;
+        };
+        tickLoop();
+        this._loop = tickLoop;
+        this.bgmTimer = setInterval(tickLoop, this.bgmInterval);
+      },
+      // switch between calm (900ms/step) and urgent fast tempo (420ms/step)
+      setUrgent(on, force) {
+        if (!force && on === this.urgent) return;
+        this.urgent = on;
+        this.bgmInterval = on ? 420 : 900;
+        if (this.bgmTimer && this._loop) { clearInterval(this.bgmTimer); this.bgmTimer = setInterval(this._loop, this.bgmInterval); }
+      },
+      stopBgm() { this.playing = false; if (this.bgmTimer) { clearInterval(this.bgmTimer); this.bgmTimer = null; } this.urgent = false; this.bgmInterval = 900; },
+      toggleMute() {
+        this.init(); this.muted = !this.muted;
+        if (this.master) this.master.gain.setTargetAtTime(this.muted ? 0 : 0.9, this.ctx.currentTime, 0.02);
+        return this.muted;
+      }
+    };
 
-  // 遊戲狀態與題庫
-  let studentName = "";
-  let score = 50;
-  let monsterHP = 100;
-  let currentQ = 0;
-  let totalAnswered = 0; // 紀錄總答題次數
-  let correctCount = 0;  // 紀錄答對次數
-  let errorStats = { "形近字混淆": 0, "音近字混淆": 0, "形音近混淆": 0 };
+    /* ---------- LEVEL DATA ---------- */
+    const LEVELS = [
+      {
+        number: 1, name: "第一關 · 同音怪之塔", monster: "👹", type: "bubble", theme: "castle",
+        questions: [
+          { id: "L1Q1", options: ["人民幣","人民弊","人民蔽"], correct: "人民幣",
+            phonetic: "rén mín bì · 錢幣的「幣」從「巾」，不是「弊病」的「弊」。" },
+          { id: "L1Q2", options: ["遊泳","游泳","油泳"], correct: "游泳",
+            phonetic: "yóu yǒng · 在水中活動用「氵游」，不是「遊玩」的「遊」。" },
+          { id: "L1Q3", options: ["口喝","口渴","口河"], correct: "口渴",
+            phonetic: "kǒu kě · 想喝水的感覺是「渴」，從「氵」與「曷」。" },
+          { id: "L1Q4", options: ["子蛋","子旦","子彈"], correct: "子彈",
+            phonetic: "zǐ dàn · 武器的「彈」從「弓」，不是「雞蛋」的「蛋」。" },
+          { id: "L1Q5", options: ["不可思義","不可思議","不可思意"], correct: "不可思議",
+            phonetic: "bù kě sī yì · 「議」從「言」，指難以言說、想像。" }
+        ]
+      },
+      {
+        number: 2, name: "第二關 · 微觀地牢", monster: "👹", type: "dragdrop", theme: "dungeon",
+        questions: [
+          // assemble = the ONE character being built (slot "%" + component); partner = the other word in the phrase.
+          { id: "L2Q1", assemble: "%宛", partner: "惜", partnerSide: "after", options:[{k:"A",r:"忄"},{k:"B",r:"女"},{k:"C",r:"石"},{k:"D",r:"蟲"}],
+            correct: "A", answerWord: "惋惜", hint: "「惋惜」與心情有關，應用「忄」(心)部。" },
+          { id: "L2Q2", assemble: "%監", vertical: true, partner: "球", partnerSide: "after", options:[{k:"A",r:"艹"},{k:"B",r:"⺮"},{k:"C",r:"氵"},{k:"D",r:"衤"}],
+            correct: "B", answerWord: "籃球", hint: "「籃」是竹製的籃子，用「⺮」(竹)部 → 籃球。" },
+          { id: "L2Q3", assemble: "%青", partner: "天", partnerSide: "after", options:[{k:"A",r:"言"},{k:"B",r:"忄"},{k:"C",r:"氵"},{k:"D",r:"日"}],
+            correct: "D", answerWord: "晴天", hint: "天氣好與太陽有關，「晴」從「日」部 → 晴天。" },
+          { id: "L2Q4", assemble: "%艮", partner: "本", partnerSide: "after", options:[{k:"A",r:"目"},{k:"B",r:"忄"},{k:"C",r:"𧾷"},{k:"D",r:"木"}],
+            correct: "D", answerWord: "根本", hint: "植物的根屬於樹木，「根」從「木」部 → 根本。" },
+          { id: "L2Q5", assemble: "%皮", partner: "棉", partnerSide: "before", options:[{k:"A",r:"扌"},{k:"B",r:"礻"},{k:"C",r:"衤"},{k:"D",r:"土"}],
+            correct: "C", answerWord: "棉被", hint: "棉被是布織物，「被」從「衤」(衣)部 → 棉被。" }
+        ]
+      },
+      {
+        number: 3, name: "第三關 · 雙重幻象城", monster: "👹", type: "shield",
+        questions: [
+          // Pick the shield printed with the correct word for the blank; prompt shows "( )別" etc.
+          { id: "L3Q1", prompt: "( )別", options:[{k:"A",r:"姓別"},{k:"B",r:"性別"},{k:"C",r:"星別"},{k:"D",r:"生別"}],
+            correct: "B", answerWord: "性別", hint: "「性別」指男女之分，用「性」(忄)，不是姓名的「姓」。" },
+          { id: "L3Q2", prompt: "( )成", options:[{k:"A",r:"贊成"},{k:"B",r:"讚成"},{k:"C",r:"暫成"},{k:"D",r:"攢成"}],
+            correct: "A", answerWord: "贊成", hint: "同意用「贊成」，「贊」有支持之意；「讚」是稱讚。" },
+          { id: "L3Q3", prompt: "( )順", options:[{k:"A",r:"考順"},{k:"B",r:"拷順"},{k:"C",r:"孝順"},{k:"D",r:"效順"}],
+            correct: "C", answerWord: "孝順", hint: "敬愛父母是「孝順」，從「老/子」的「孝」。" },
+          { id: "L3Q4", prompt: "( )口", options:[{k:"A",r:"籍口"},{k:"B",r:"藉口"},{k:"C",r:"借口"},{k:"D",r:"昔口"}],
+            correct: "B", answerWord: "藉口", hint: "找理由推搪是「藉口」，從「艹」的「藉」。" },
+          { id: "L3Q5", prompt: "時( )", options:[{k:"A",r:"時後"},{k:"B",r:"時侯"},{k:"C",r:"時候"},{k:"D",r:"時猴"}],
+            correct: "C", answerWord: "時候", hint: "「時候」的「候」中間有一豎，不是「侯」爵的「侯」。" }
+        ]
+      },
+      {
+        number: 4, name: "第四關 · 幻影怪森林", monster: "👺", type: "scratch",
+        questions: [
+          // Camouflaged fog spots blended into scene objects (pos = % of arena). Scratch -> Keep/Erase.
+          // Spot 1 — deep in the tree hollow (left trunk)
+          { id: "L4Q1", word: "暴躁", isCorrectWord: true,  correct: "keep",  answerWord: "暴躁", pos: {x:15, y:60},
+            hint: "「暴躁」是正確詞語，脾氣急躁，應「保留通過」。" },
+          // Spot 2 — blended into dense foliage, top right
+          { id: "L4Q2", word: "成積", isCorrectWord: false, correct: "erase", fixWord: "成績", answerWord: "成績", pos: {x:85, y:32},
+            hint: "應為「成績」，「績」從「糸」(絲)部；「積」是累積。錯字要「淨化刪除」。" },
+          // Spot 3 — hidden under tangled roots / rocks, bottom left
+          { id: "L4Q3", word: "收穫", isCorrectWord: true,  correct: "keep",  answerWord: "收穫", pos: {x:18, y:90},
+            hint: "「收穫」是正確詞語，指得到成果，應「保留通過」。" },
+          // Spot 4 — camouflaged behind glowing mushrooms / bushes, bottom right
+          { id: "L4Q4", word: "原故", isCorrectWord: false, correct: "erase", fixWord: "緣故", answerWord: "緣故", pos: {x:70, y:90},
+            hint: "應為「緣故」，「緣」表原因；「原」是原本。錯字要「淨化刪除」。" },
+          // Spot 5 — hanging beneath a twisted branch / vine, upper centre
+          { id: "L4Q5", word: "獎卷", isCorrectWord: false, correct: "erase", fixWord: "獎券", answerWord: "獎券", pos: {x:52, y:24},
+            hint: "應為「獎券」，「券」是票券，從「刀」；「卷」是書卷。錯字要「淨化刪除」。" }
+        ]
+      }
+    ];
 
-  const questions = [
-    { q: "請選出正確的正字：", options: ["澈底", "徹底"], ans: 1, errorType: "形音近混淆" },
-    { q: "請選出正確的正字：", options: ["倒霉", "倒黴"], ans: 0, errorType: "音近字混淆" },
-    { q: "請選出正確的正字：", options: ["名信片", "明信片"], ans: 1, errorType: "音近字混淆" },
-    { q: "請選出正確的正字：", options: ["再接再厲", "再接再勵"], ans: 0, errorType: "形音近混淆" },
-    { q: "請選出正確的正字：", options: ["按裝", "安裝"], ans: 1, errorType: "形音近混淆" },
-    { q: "請選出正確的正字：", options: ["水蒸氣", "水蒸汽"], ans: 0, errorType: "形音近混淆" },
-    { q: "請選出正確的正字：", options: ["前仆後繼", "前撲後繼"], ans: 0, errorType: "音近字混淆" },
-    { q: "請選出正確的正字：", options: ["濫竽充數", "濫芋充數"], ans: 0, errorType: "形近字混淆" },
-    { q: "請選出正確的正字：", options: ["身分證", "身份證"], ans: 0, errorType: "形音近混淆" },
-    { q: "請選出正確的正字：", options: ["美輪美奐", "美輪美美"], ans: 0, errorType: "形近字混淆" }
-  ];
+    /* ---------- RULE CONSTANTS ---------- */
+    const TIME_LIMIT = 30, CRIT_WINDOW = 10, TIMER_DANGER = 5, PENALTY_PAUSE = 3;
+    // Level 4 (scratch) gets 60s/question (≈5 min total) so young students have time to explore + scratch.
+    const LEVEL_TIME = { bubble: 30, dragdrop: 30, shield: 30, scratch: 60 };
+    const L4_TOTAL_TIME = 150; // Level 4 total countdown: 2.5 minutes
+    function curTimeLimit() { const lvl = LEVELS[State.levelIdx]; return (lvl && LEVEL_TIME[lvl.type]) || TIME_LIMIT; }
+    const SCORE = { correctFirst: 100, critBonus: 120, correctRetry: 50, wrongPenalty: 20 };
+    const MONSTER_DMG_FIRST = 20, MONSTER_DMG_RETRY = 10, PLAYER_MAX_HP = 100;
 
-  // 切換至玩法說明卡
-  function goToRules() {
-    const input = document.getElementById("student-name").value.trim();
-    if (!input) {
-      alert("請輸入姓名喔！");
-      return;
+    /* ---------- STATE ---------- */
+    const State = {
+      studentId: "", sessionId: "", levelIdx: 0, qIdx: 0, score: 0,
+      playerHP: PLAYER_MAX_HP, monsterHP: 100, attempt: 1,
+      timeLeft: TIME_LIMIT, timerId: null, timerPaused: false,
+      questionStart: 0, locked: false, analytics: []
+    };
+
+    /* ---------- DOM ---------- */
+    const $ = (id) => document.getElementById(id);
+    const el = {};
+    function cacheDom() {
+      ["start-screen","game-screen","summary-screen","student-id","btn-start",
+       "player-hp-fill","monster-hp-fill","score-value","monster-hp-pct",
+       "level-name","question-progress","timer-wrap","timer-fill","timer-text",
+       "vfx-layer","level1-view","level2-view","bubble-field",
+       "dd-target","dd-prompt","dd-context","dd-options","feedback-toast","hint-modal","hint-icon","hint-body",
+       "hint-countdown","btn-hint-retry","monster-portrait","sum-score","sum-correct",
+       "sum-accuracy","sum-avgtime","analytics-tbody","btn-download-csv","btn-replay","btn-mute",
+       "battle-field","atmosphere","stage-monster","stage-monster-body","forest-scene",
+       "castle-balcony","dungeon-cell","caged-monster",
+       "howto-modal","howto-icon","howto-badge","howto-title","howto-subtitle",
+       "howto-rules","btn-howto-start","howto-start-label",
+       "level3-view","shield-prompt","shield-options","lightning-charge","lightning-flash","castle-towers",
+       "connect-arena","connect-svg","connect-line","hero-node",
+       "level4-view","scratch-word","scratch-canvas","scratch-actions","scratch-hint","btn-erase","btn-keep",
+       "forest-map","fog-nodes","fm-progress-count","scratch-focus",
+       "phantom-monster","phantom-hp-fill","phantom-hp-pct","phantom-stage"
+      ].forEach((k) => el[k] = $(k));
+      el.playerPortrait = document.querySelector(".player-portrait");
     }
-    studentName = input;
-    document.getElementById("start-card").style.display = "none";
-    document.getElementById("rules-card").style.display = "block";
-  }
 
-  // 開始遊戲
-  function startGame() {
-    document.getElementById("rules-card").style.display = "none";
-    document.getElementById("game-card").style.display = "block";
-    loadQuestion();
-  }
-
-  function loadQuestion() {
-    const q = questions[currentQ % questions.length];
-    document.getElementById("question-text").innerText = q.q;
-    const optDiv = document.getElementById("options");
-    optDiv.innerHTML = "";
-    
-    q.options.forEach((opt, idx) => {
-      const btn = document.createElement("button");
-      btn.className = "btn";
-      btn.innerText = opt;
-      btn.onclick = () => checkAnswer(idx);
-      optDiv.appendChild(btn);
-    });
-  }
-
-  function checkAnswer(selectedIdx) {
-    const q = questions[currentQ % questions.length];
-    const isCorrect = selectedIdx === q.ans;
-    const modal = document.getElementById("feedback-modal");
-    const title = document.getElementById("feedback-title");
-    const img = document.getElementById("feedback-img");
-
-    totalAnswered++; // 累計總作答題數
-
-    if (isCorrect) {
-      correctCount++; // 累計答對題數
-      score += 5;
-      monsterHP = Math.max(0, monsterHP - 10);
-      title.innerText = "答對了！怪獸 HP -10 ⚔️ (+5分)";
-      title.style.color = "#00b894";
-      img.src = CHIIKAWA_IMG;
-    } else {
-      score -= 5;
-      errorStats[q.errorType]++; // 紀錄 AI 錯誤類型
-      title.innerText = "答錯了！受到反擊 😭 (-5分)";
-      title.style.color = "#d63031";
-      img.src = HACHIWARE_IMG;
-      alert(`答錯囉！這題屬於【${q.errorType}】，加油！`);
+    /* ---------- SCREEN / HUD ---------- */
+    function showScreen(id) {
+      document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+      el[id].classList.add("active");
+    }
+    function updateHUD() {
+      el["score-value"].textContent = State.score;
+      el["player-hp-fill"].style.width = Math.max(0, State.playerHP) + "%";
+      el["monster-hp-fill"].style.width = Math.max(0, State.monsterHP) + "%";
+      el["monster-hp-pct"].textContent = Math.max(0, Math.round(State.monsterHP)) + "%";
+      const lvl = LEVELS[State.levelIdx];
+      el["level-name"].textContent = lvl.name;
+      el["question-progress"].textContent = "Q " + (State.qIdx + 1) + " / " + lvl.questions.length;
+      el["monster-portrait"].textContent = lvl.monster;
+    }
+    function toast(msg, kind) {
+      const t = el["feedback-toast"];
+      t.textContent = msg; t.className = "feedback-toast show " + (kind || "");
+      clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 1400);
     }
 
-    // 更新介面
-    document.getElementById("score").innerText = score;
-    document.getElementById("hp-fill").style.width = monsterHP + "%";
-
-    // 判斷是否達到 100 分通關
-    if (score >= 100) {
-      endGame();
-    } else {
-      modal.style.display = "flex";
+    /* ---------- TIMER ---------- */
+    function startTimer() {
+      stopTimer(); State.timeLeft = curTimeLimit(); State.timerPaused = false;
+      SFX.setUrgent(false); // reset tempo for a fresh question
+      renderTimer(); State.timerId = setInterval(tick, 1000);
     }
-  }
+    function stopTimer() { if (State.timerId) { clearInterval(State.timerId); State.timerId = null; } SFX.setUrgent(false); }
+    function tick() {
+      if (State.timerPaused) return;
+      State.timeLeft--; renderTimer();
+      // urgency: ≤5s remaining → fast BGM + rhythmic clock tick each second
+      if (State.timeLeft <= TIMER_DANGER && State.timeLeft > 0) { SFX.setUrgent(true); SFX.play("tick"); }
+      if (State.timeLeft <= 0) { stopTimer(); onTimeout(); }
+    }
+    function renderTimer() {
+      el["timer-fill"].style.width = (State.timeLeft / curTimeLimit()) * 100 + "%";
+      el["timer-text"].textContent = State.timeLeft + "s";
+      el["timer-wrap"].classList.toggle("danger", State.timeLeft <= TIMER_DANGER);
+    }
+    function pauseTimerFor(seconds, cb) {
+      State.timerPaused = true;
+      setTimeout(() => { State.timerPaused = false; if (cb) cb(); }, seconds * 1000);
+    }
+    function elapsedSeconds() {
+      return Math.min(curTimeLimit(), +(((Date.now() - State.questionStart) / 1000)).toFixed(1));
+    }
 
-  function closeModal() {
-    document.getElementById("feedback-modal").style.display = "none";
-    currentQ++;
-    loadQuestion();
-  }
+    /* ---------- ANALYTICS ---------- */
+    const AnalyticsManager = {
+      startQuestion(q) {
+        this.current = {
+          Student_ID: State.studentId, Session_ID: State.sessionId,
+          Level_Number: LEVELS[State.levelIdx].number, Question_ID: q.id,
+          First_Attempt_Correct: false, Final_Correct: false,
+          Response_Time_Seconds: 0, Selected_Option: ""
+        };
+      },
+      record(fields) { Object.assign(this.current, fields); },
+      commit() { if (this.current) { State.analytics.push(this.current); this.current = null; } },
+      toCSV() {
+        const headers = ["Student_ID","Session_ID","Level_Number","Question_ID",
+          "First_Attempt_Correct","Final_Correct","Response_Time_Seconds","Selected_Option"];
+        const esc = (v) => { const s = String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; };
+        const lines = [headers.join(",")];
+        State.analytics.forEach((row) => lines.push(headers.map((h) => esc(row[h])).join(",")));
+        return lines.join("\n");
+      },
+      download() {
+        const csv = "\uFEFF" + this.toCSV();
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = "word_spirit_" + State.sessionId + ".csv";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    };
 
-  function endGame() {
-    // 1. 動態計算真實答對率
-    const accuracyCalc = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
-    const accuracyStr = accuracyCalc + "%";
+    /* ---------- VFX ---------- */
+    // returns the monster element currently on screen (caged monster in L2, else the shared boss)
+    function activeMonsterEl() {
+      const caged = el["caged-monster"];
+      if (currentLevel().type === "dragdrop" && caged) return caged;
+      return el["stage-monster"];
+    }
+    const VFX = {
+      at(clientX, clientY, node) {
+        const r = el["vfx-layer"].getBoundingClientRect();
+        node.style.left = (clientX - r.left) + "px";
+        node.style.top = (clientY - r.top) + "px";
+        el["vfx-layer"].appendChild(node); return node;
+      },
+      slash(cx, cy) {
+        const s = document.createElement("div"); s.className = "slash";
+        this.at(cx, cy, s); setTimeout(() => s.remove(), 400);
+      },
+      floatNum(cx, cy, text, positive) {
+        const n = document.createElement("div");
+        n.className = "float-num " + (positive ? "plus" : "minus");
+        n.textContent = text; this.at(cx, cy, n); setTimeout(() => n.remove(), 1000);
+      },
+      projectile(fromX, fromY, cls) {
+        const p = document.createElement("div"); p.className = cls;
+        this.at(fromX, fromY, p);
+        const lr = el["vfx-layer"].getBoundingClientRect();
+        const mr = el["monster-portrait"].getBoundingClientRect();
+        const tx = mr.left + mr.width / 2 - lr.left, ty = mr.top + mr.height / 2 - lr.top;
+        p.style.transition = "left .45s cubic-bezier(.4,0,.6,1), top .45s cubic-bezier(.4,0,.6,1), opacity .2s ease .35s";
+        requestAnimationFrame(() => { p.style.left = tx + "px"; p.style.top = ty + "px"; p.style.opacity = "0"; });
+        setTimeout(() => { p.remove(); monsterHitFX(); }, 480);
+      },
+      critical() {
+        const c = document.createElement("div"); c.className = "critical-burst";
+        c.textContent = "CRITICAL HIT!"; el["vfx-layer"].appendChild(c);
+        setTimeout(() => c.remove(), 900);
+      },
+      // dramatic big damage burst + full-screen slash over the monster
+      dramaticHit(hpText, scoreText) {
+        const layer = el["vfx-layer"], lr = layer.getBoundingClientRect();
+        const mr = activeMonsterEl().getBoundingClientRect();
+        const cx = mr.left + mr.width / 2 - lr.left;
+        const topY = mr.top - lr.top + Math.min(mr.height * 0.25, 60);
+        // impact flash
+        const flash = document.createElement("div"); flash.className = "impact-flash";
+        layer.appendChild(flash); setTimeout(() => flash.remove(), 420);
+        // full-screen slash burst
+        const burst = document.createElement("div"); burst.className = "slash-burst";
+        burst.innerHTML = "<i></i><i></i>"; layer.appendChild(burst);
+        setTimeout(() => burst.remove(), 560);
+        // big damage text burst
+        const d = document.createElement("div"); d.className = "dmg-burst";
+        d.style.left = cx + "px"; d.style.top = topY + "px";
+        d.innerHTML = '<span class="hp">' + hpText + '</span><span class="sc">' + scoreText + '</span>';
+        layer.appendChild(d); setTimeout(() => d.remove(), 1300);
+      },
+      // Level 2: energy beam from the completed character up to the tree monster
+      energyBeam(fromX, fromY) {
+        const layer = el["vfx-layer"], lr = layer.getBoundingClientRect();
+        const mr = activeMonsterEl().getBoundingClientRect();
+        const sx = fromX - lr.left, sy = fromY - lr.top;
+        const tx = mr.left + mr.width / 2 - lr.left, ty = mr.top + mr.height / 2 - lr.top;
+        const dx = tx - sx, dy = ty - sy;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+        const beam = document.createElement("div"); beam.className = "energy-beam";
+        beam.style.left = sx + "px"; beam.style.top = (sy - 7) + "px";
+        beam.style.width = len + "px"; beam.style.transform = "rotate(" + ang + "deg)";
+        layer.appendChild(beam); setTimeout(() => beam.remove(), 520);
+        setTimeout(monsterHitFX, 260);
+      }
+    };
+    function monsterHitFX() {
+      SFX.play("impact"); // deep impact thump on every monster hit
+      const m = el["monster-portrait"]; m.classList.remove("hit"); void m.offsetWidth; m.classList.add("hit");
+      const sm = activeMonsterEl();
+      if (sm) { sm.classList.remove("hit"); void sm.offsetWidth; sm.classList.add("hit"); }
+    }
+    function playerHurtFX() {
+      const p = el.playerPortrait; p.classList.remove("hurt"); void p.offsetWidth; p.classList.add("hurt");
+      const gs = el["game-screen"]; gs.classList.remove("shake"); void gs.offsetWidth; gs.classList.add("shake");
+    }
 
-    // 2. 找出學生錯最多的類型 (AI 診斷)
-    let mainError = "無（全對，正字大師！）";
-    let maxCount = 0;
-    for (let type in errorStats) {
-      if (errorStats[type] > maxCount) {
-        maxCount = errorStats[type];
-        mainError = type;
+    /* ---------- QUESTION FLOW ---------- */
+    const currentLevel = () => LEVELS[State.levelIdx];
+    const currentQuestion = () => currentLevel().questions[State.qIdx];
+
+    // apply the scenery for a level (called once when the level begins)
+    // L1 = castle balcony, L2 = dungeon, L3 = castle+lightning, L4 = its own forest map
+    const ATMO = { bubble: "atmo-castle-balcony", dragdrop: "atmo-dungeon-cell", shield: "atmo-castle", scratch: "atmo-dungeon" };
+    function applyLevelScenery(lvl) {
+      const t = lvl.type;
+      el["atmosphere"].className = "atmosphere " + (ATMO[t] || "atmo-tower");
+      el["forest-scene"].classList.add("hidden");            // old cartoon forest no longer used
+      el["castle-towers"].classList.toggle("hidden", t !== "shield");
+      el["castle-balcony"].classList.toggle("hidden", t !== "bubble");
+      el["dungeon-cell"].classList.toggle("hidden", t !== "dragdrop");
+      el["stage-monster-body"].textContent = lvl.monster;
+      // In L2 the monster lives INSIDE the cage (self-contained), so hide the shared top sprite.
+      el["stage-monster"].style.display = (t === "dragdrop") ? "none" : "block";
+      // The same red horned boss is used in L1, L3; L3 additionally charges thunderbolts.
+      let cls = "stage-monster boss";
+      if (t === "shield") cls += " thunder";
+      el["stage-monster"].className = cls;
+      el["stage-monster"].style.top = "10px";
+      el["stage-monster"].style.left = "50%"; el["stage-monster"].style.transform = "translateX(-50%)";
+    }
+
+    function loadQuestion() {
+      State.attempt = 1; State.locked = false;
+      const lvl = currentLevel(), q = currentQuestion();
+      const t = lvl.type;
+      el["level1-view"].classList.toggle("hidden", t !== "bubble");
+      el["level2-view"].classList.toggle("hidden", t !== "dragdrop");
+      el["level3-view"].classList.toggle("hidden", t !== "shield");
+      el["level4-view"].classList.toggle("hidden", t !== "scratch");
+      // Level 4 is a self-contained "Where's Wally" hunt with its own 300s total timer.
+      if (t === "scratch") { loadLevel4Map(); return; }
+      updateHUD(); AnalyticsManager.startQuestion(q);
+      if (t === "bubble") renderBubbles(q);
+      else if (t === "dragdrop") renderDragDrop(q);
+      else if (t === "shield") renderShields(q);
+      State.questionStart = Date.now(); startTimer();
+    }
+
+    /* ---------- LEVEL 1 ---------- */
+    function renderBubbles(q) {
+      const field = el["bubble-field"]; field.innerHTML = "";
+      const shuffled = shuffle(q.options.slice()); const n = shuffled.length;
+      shuffled.forEach((word, i) => {
+        const b = document.createElement("div");
+        b.className = "bubble floating"; b.textContent = word;
+        b.style.left = (12 + (i * (76 / Math.max(1, n - 1)))) + "%";
+        b.style.animationDelay = (i * 0.4) + "s"; b.dataset.word = word; b.dataset.sliced = "0";
+        // SWIPE / SLICE: slash when the cursor moves through the bubble
+        b.addEventListener("pointerenter", (e) => onBubbleSlice(e, b, word, q));
+        b.addEventListener("pointerdown", (e) => onBubbleSlice(e, b, word, q));
+        field.appendChild(b);
+        // monster spits this bubble out as it spawns
+        spawnSpout(i * 260);
+      });
+    }
+    // slash a bubble open when the pointer slices through it
+    function onBubbleSlice(e, bubble, word, q) {
+      if (State.locked) return;
+      if (bubble.dataset.sliced === "1") return;
+      bubble.dataset.sliced = "1";
+      const rect = bubble.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+      VFX.slash(cx, cy); SFX.play("slash");
+      if (word === q.correct) {
+        State.locked = true; bubble.classList.add("pop");
+        VFX.projectile(cx, cy, "attack-particle");
+        handleCorrect(q, word, cx, cy);
+      } else {
+        bubble.classList.add("wrong-shake");
+        setTimeout(() => { bubble.classList.remove("wrong-shake"); bubble.dataset.sliced = "0"; }, 450);
+        handleWrong(q, word);
+      }
+    }
+    // animated bubble "spout" out of the stage monster's mouth
+    function spawnSpout(delay) {
+      const sm = el["stage-monster"];
+      if (!sm || !sm.classList.contains("boss")) return;
+      for (let k = 0; k < 3; k++) {
+        setTimeout(() => {
+          const bub = document.createElement("div");
+          bub.className = "spout-bubble";
+          const size = 8 + Math.random() * 12;
+          bub.style.width = size + "px"; bub.style.height = size + "px";
+          bub.style.left = "50%"; bub.style.bottom = "14px";
+          bub.style.setProperty("--spout-dx", (Math.random() * 60 - 30) + "px");
+          bub.style.setProperty("--spout-dy", (-70 - Math.random() * 60) + "px");
+          bub.style.setProperty("--spout-dur", (0.9 + Math.random() * 0.6) + "s");
+          sm.appendChild(bub);
+          setTimeout(() => bub.remove(), 1600);
+        }, delay + k * 140);
       }
     }
 
-    // 3. 生成小八評語與設定資格證圖片
-    document.getElementById("cert-img").src = CERTIFICATE_IMG;
-    let aiText = `挑戰者 ${studentName} 成功獲得 100 分！<br>本次總答題數：${totalAnswered} 題，整體答對率：<b>${accuracyStr}</b>。`;
-    if (maxCount > 0) {
-      aiText += `<br>發現你在<b>【${mainError}】</b>類型較容易掉入陷阱，平時可以多注意喔！`;
-    } else {
-      aiText += `<br>太厲害了！你的繁體正字觀念非常清晰，完全沒有難倒你！`;
-    }
-    document.getElementById("ai-feedback-text").innerHTML = aiText;
+    /* ---------- LEVEL 2 ---------- */
+    function renderDragDrop(q) {
+      const target = el["dd-target"]; target.innerHTML = "";
+      // Q2 (籃 = ⺮ on top of 監) uses vertical top-bottom stacking; others horizontal.
+      target.classList.toggle("vertical", !!q.vertical);
 
-    // 4. 彈出資格證視窗與彩帶特效
-    document.getElementById("cert-modal").style.display = "flex";
-    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+      // --- TIER 1: header showing the overall target phrase, e.g. 目標詞語：[ ? ] 惜 ---
+      const missing = '<span class="hdr-slot">[ ? ]</span>';
+      const partnerHtml = '<span class="hdr-word">' + q.partner + '</span>';
+      const phrase = (q.partnerSide === "before")
+        ? partnerHtml + " " + missing
+        : missing + " " + partnerHtml;
+      el["dd-prompt"].innerHTML = '<span class="hdr-label">目標詞語：</span>' + phrase;
 
-    // 5. 將正確計算的數據自動發送至 Google 試算表後台
-    if (GAS_URL && GAS_URL.startsWith("https://script.google.com")) {
-      fetch(GAS_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify({
-          name: studentName,
-          score: score,
-          accuracy: accuracyStr, // 傳送真實動態計算的答對率
-          mainError: mainError
-        })
-      })
-      .then(res => console.log("數據成功傳送至後台！"))
-      .catch(err => console.log("數據傳送錯誤：", err));
+      // (context badge below the box is no longer used — header carries the context)
+      el["dd-context"].classList.add("hidden"); el["dd-context"].innerHTML = "";
+
+      // --- TIER 2: assembly box shows ONLY the character being built (slot + component) ---
+      q.assemble.split("").forEach((ch) => {
+        if (ch === "%") {
+          const slot = document.createElement("div");
+          slot.className = "dd-slot"; slot.id = "active-slot"; slot.textContent = "？";
+          attachSlotDropHandlers(slot); target.appendChild(slot);
+        } else {
+          const span = document.createElement("span");
+          span.className = "fixed-part"; span.textContent = ch; target.appendChild(span);
+        }
+      });
+      const opts = el["dd-options"]; opts.innerHTML = "";
+      q.options.forEach((opt) => {
+        const o = document.createElement("div");
+        o.className = "dd-option"; o.draggable = true; o.dataset.key = opt.k;
+        o.innerHTML = '<span class="opt-key">' + opt.k + '</span><span>' + opt.r + "</span>";
+        // native HTML5 drag (desktop)
+        o.addEventListener("dragstart", (ev) => {
+          if (State.locked || o.classList.contains("used")) { ev.preventDefault(); return; }
+          ev.dataTransfer.setData("text/plain", opt.k); o.classList.add("dragging");
+        });
+        o.addEventListener("dragend", () => o.classList.remove("dragging"));
+        // pointer drag fallback (touch / pen) — a plain click does NOTHING; the player
+        // must physically drag the radical and release it over the drop slot.
+        o.addEventListener("pointerdown", (ev) => startOptionPointerDrag(ev, o, opt, q));
+        opts.appendChild(o);
+      });
     }
-  }
-</script>
+    // Pointer-based drag for touch/pen: requires real dragging onto the slot; a tap does nothing.
+    function startOptionPointerDrag(ev, optEl, opt, q) {
+      if (State.locked || optEl.classList.contains("used")) return;
+      if (ev.pointerType === "mouse") return; // mouse uses native HTML5 drag above
+      ev.preventDefault();
+      const slot = $("active-slot");
+      let moved = false;
+      const ghost = optEl.cloneNode(true);
+      ghost.style.position = "fixed"; ghost.style.zIndex = "60"; ghost.style.pointerEvents = "none";
+      ghost.style.width = optEl.offsetWidth + "px"; ghost.style.opacity = ".9";
+      const place = (x, y) => { ghost.style.left = (x - optEl.offsetWidth / 2) + "px"; ghost.style.top = (y - optEl.offsetHeight / 2) + "px"; };
+      place(ev.clientX, ev.clientY); document.body.appendChild(ghost);
+      optEl.classList.add("dragging");
+      const move = (e) => {
+        moved = true; place(e.clientX, e.clientY);
+        const r = slot.getBoundingClientRect();
+        const over = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+        slot.classList.toggle("over", over);
+      };
+      const up = (e) => {
+        window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up);
+        ghost.remove(); optEl.classList.remove("dragging"); slot.classList.remove("over");
+        const r = slot.getBoundingClientRect();
+        const over = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+        // only counts if the player actually dragged AND released over the slot (no tap-to-answer)
+        if (moved && over && !State.locked) placeIntoSlot(opt, optEl, q);
+      };
+      window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
+    }
+    function attachSlotDropHandlers(slot) {
+      slot.addEventListener("dragover", (ev) => { ev.preventDefault(); slot.classList.add("over"); });
+      slot.addEventListener("dragleave", () => slot.classList.remove("over"));
+      slot.addEventListener("drop", (ev) => {
+        ev.preventDefault(); slot.classList.remove("over");
+        if (State.locked) return;
+        const key = ev.dataTransfer.getData("text/plain"), q2 = currentQuestion();
+        const opt = q2.options.find((o) => o.k === key);
+        const optEl = el["dd-options"].querySelector('[data-key="' + key + '"]');
+        if (opt) placeIntoSlot(opt, optEl, q2);
+      });
+    }
+    function placeIntoSlot(opt, optEl, q) {
+      if (State.locked) return;
+      const slot = $("active-slot");
+      slot.textContent = opt.r; slot.classList.add("filled");
+      if (opt.k === q.correct) {
+        State.locked = true; slot.classList.add("correct"); SFX.play("snap");
+        if (optEl) optEl.classList.add("used");
+        // golden light burst on the merged character, then energy beam to the tree monster
+        const targetEl = el["dd-target"];
+        targetEl.classList.remove("char-glow"); void targetEl.offsetWidth; targetEl.classList.add("char-glow");
+        const tRect = targetEl.getBoundingClientRect();
+        const bx = tRect.left + tRect.width / 2, by = tRect.top + tRect.height / 2;
+        VFX.energyBeam(bx, by);
+        handleCorrect(q, opt.k, bx, by);
+      } else {
+        slot.classList.add("wrong-shake");
+        setTimeout(() => { slot.classList.remove("wrong-shake", "filled"); slot.textContent = "？"; }, 450);
+        handleWrong(q, opt.k);
+      }
+    }
+
+    /* ---------- LEVEL 3 : shield reflect ---------- */
+    // fixed positions for the 4 shields (percent of arena)
+    const SHIELD_POS = [ {x:20,y:30}, {x:80,y:30}, {x:20,y:60}, {x:80,y:60} ];
+    let connectState = null;
+    function renderShields(q) {
+      el["shield-prompt"].innerHTML = q.prompt.replace("( )", '<span class="blank">( )</span>');
+      const wrap = el["shield-options"]; wrap.innerHTML = "";
+      q.options.forEach((opt, i) => {
+        const s = document.createElement("div");
+        s.className = "shield-opt"; s.dataset.key = opt.k;
+        const pos = SHIELD_POS[i] || {x:50,y:45};
+        s.style.left = pos.x + "%"; s.style.top = pos.y + "%";
+        s.innerHTML = '<span class="opt-key">護盾 ' + opt.k + '</span>' + opt.r;
+        // NO click/tap to answer — the player MUST drag a line from the hero to the shield.
+        wrap.appendChild(s);
+      });
+      el["connect-line"].style.display = "none"; // reset the drawn line each question
+      setupConnectDrag(q);
+    }
+    // drag a line from the hero node to a shield
+    function setupConnectDrag(q) {
+      const arena = el["connect-arena"], hero = el["hero-node"], line = el["connect-line"];
+      connectState = { dragging: false, q };
+      const arenaRect = () => arena.getBoundingClientRect();
+      const heroCenter = () => {
+        const hr = hero.getBoundingClientRect(), ar = arenaRect();
+        return { x: hr.left + hr.width / 2 - ar.left, y: hr.top + hr.height * 0.85 - ar.top };
+      };
+      const start = (e) => {
+        if (State.locked) return;
+        connectState.dragging = true;
+        const c = heroCenter();
+        line.setAttribute("x1", c.x); line.setAttribute("y1", c.y);
+        line.setAttribute("x2", c.x); line.setAttribute("y2", c.y);
+        line.style.display = "block";
+        moveTo(e);
+        window.addEventListener("pointermove", moveTo);
+        window.addEventListener("pointerup", end);
+      };
+      const moveTo = (e) => {
+        if (!connectState.dragging) return;
+        const ar = arenaRect();
+        line.setAttribute("x2", e.clientX - ar.left);
+        line.setAttribute("y2", e.clientY - ar.top);
+        // highlight a shield under the pointer
+        const target = shieldUnder(e.clientX, e.clientY);
+        el["shield-options"].querySelectorAll(".shield-opt").forEach((s) => s.classList.toggle("over", s === target));
+      };
+      const end = (e) => {
+        window.removeEventListener("pointermove", moveTo);
+        window.removeEventListener("pointerup", end);
+        if (!connectState.dragging) return;
+        connectState.dragging = false;
+        const target = shieldUnder(e.clientX, e.clientY);
+        el["shield-options"].querySelectorAll(".shield-opt").forEach((s) => s.classList.remove("over"));
+        if (target) {
+          const opt = connectState.q.options.find((o) => o.k === target.dataset.key);
+          // snap the line onto the chosen shield
+          const ar = arenaRect(), tr = target.getBoundingClientRect();
+          line.setAttribute("x2", tr.left + tr.width / 2 - ar.left);
+          line.setAttribute("y2", tr.top + tr.height / 2 - ar.top);
+          resolveShield(target, opt, connectState.q);
+        } else {
+          line.style.display = "none"; // released on empty space
+        }
+      };
+      hero.onpointerdown = start;
+    }
+    function shieldUnder(cx, cy) {
+      let found = null;
+      el["shield-options"].querySelectorAll(".shield-opt").forEach((s) => {
+        if (s.classList.contains("used")) return;
+        const r = s.getBoundingClientRect();
+        if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) found = s;
+      });
+      return found;
+    }
+    function resolveShield(node, opt, q) {
+      if (State.locked || !opt || node.classList.contains("used")) return;
+      if (opt.k === q.correct) {
+        State.locked = true;
+        node.classList.add("correct", "raise");
+        el["shield-options"].querySelectorAll(".shield-opt").forEach((x) => { if (x !== node) x.classList.add("used"); });
+        lightningStrike();
+        const r = node.getBoundingClientRect();
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        reflectBeam(cx, cy);
+        handleCorrect(q, opt.k, cx, cy);
+      } else {
+        node.classList.add("wrong");
+        setTimeout(() => { node.classList.remove("wrong"); el["connect-line"].style.display = "none"; }, 450);
+        handleWrong(q, opt.k);
+      }
+    }
+    function lightningStrike() {
+      const f = el["lightning-flash"]; f.classList.remove("strike"); void f.offsetWidth; f.classList.add("strike");
+    }
+    function reflectBeam(fromX, fromY) {
+      SFX.play("lightning");
+      const layer = el["vfx-layer"], lr = layer.getBoundingClientRect();
+      const mr = el["stage-monster"].getBoundingClientRect();
+      const sx = fromX - lr.left, sy = fromY - lr.top;
+      const tx = mr.left + mr.width / 2 - lr.left, ty = mr.top + mr.height / 2 - lr.top;
+      const dx = tx - sx, dy = ty - sy, len = Math.sqrt(dx * dx + dy * dy);
+      const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+      const beam = document.createElement("div"); beam.className = "reflect-beam";
+      beam.style.left = sx + "px"; beam.style.top = (sy - 6) + "px";
+      beam.style.width = len + "px"; beam.style.transform = "rotate(" + ang + "deg)";
+      layer.appendChild(beam); setTimeout(() => beam.remove(), 520);
+      setTimeout(monsterHitFX, 260);
+    }
+
+    /* ---------- LEVEL 4 : scratch to reveal ---------- */
+    /* ===== Where's-Wally forest hunt state ===== */
+    let L4 = null;           // { spots:[{q,el,started,done}], cleared, totalTimerId, timeLeft }
+    let scratchState = null; // active focus-card scratch state
+
+    // Set up the whole L4 map: place all 5 fog spots + start the single 300s total timer.
+    function loadLevel4Map() {
+      const lvl = currentLevel();
+      el["scratch-focus"].classList.add("hidden");
+      el["stage-monster"].style.display = "none"; // no top boss during the hunt
+      const nodes = el["fog-nodes"]; nodes.innerHTML = "";
+      L4 = { spots: [], cleared: 0, total: lvl.questions.length, timerId: null, timeLeft: L4_TOTAL_TIME };
+
+      lvl.questions.forEach((q, i) => {
+        const node = document.createElement("button");
+        node.className = "fog-node";
+        node.setAttribute("aria-label", "hidden fog");
+        node.style.left = q.pos.x + "%"; node.style.top = q.pos.y + "%";
+        // subtle swirling dark mist (camouflaged) + hidden checkmark badge for the purified state
+        node.innerHTML = '<span class="mist"></span><span class="badge"><i class="fa-solid fa-check"></i></span>';
+        const spot = { q, node, done: false, firstAttempt: null, startedAt: 0 };
+        node.addEventListener("click", () => { if (!spot.done && !State.locked) openFocus(spot); });
+        nodes.appendChild(node);
+        L4.spots.push(spot);
+      });
+
+      updateL4Progress();
+      // single 5-minute countdown shown in the shared HUD timer bar
+      startL4Timer();
+      updateHUD();
+    }
+
+    function startL4Timer() {
+      stopTimer(); // reuse the shared timer id slot cleanly
+      if (L4.timerId) clearInterval(L4.timerId);
+      L4.timeLeft = L4_TOTAL_TIME;
+      renderL4Timer();
+      L4.timerId = setInterval(() => {
+        L4.timeLeft--; renderL4Timer();
+        // urgency: ≤20s remaining → fast BGM + clock tick each second
+        if (L4.timeLeft <= 20 && L4.timeLeft > 0) { SFX.setUrgent(true); SFX.play("tick"); }
+        if (L4.timeLeft <= 0) { clearInterval(L4.timerId); L4.timerId = null; finishLevel4(); }
+      }, 1000);
+    }
+    function renderL4Timer() {
+      const pct = (L4.timeLeft / L4_TOTAL_TIME) * 100;
+      el["timer-fill"].style.width = pct + "%";
+      const m = Math.floor(L4.timeLeft / 60), s = L4.timeLeft % 60;
+      el["timer-text"].textContent = m + ":" + String(s).padStart(2, "0");
+      el["timer-wrap"].classList.toggle("danger", L4.timeLeft <= 20);
+    }
+    function updateL4Progress() {
+      el["fm-progress-count"].textContent = L4.cleared;
+    }
+    function renderPhantomHP() {
+      const hp = Math.max(0, State.monsterHP);
+      el["phantom-hp-fill"].style.width = hp + "%";
+      el["phantom-hp-pct"].textContent = Math.round(hp) + "%";
+    }
+    // dramatic monster hit: red/white flash + recoil + golden slash + sparkling dissolve burst
+    function phantomAttack() {
+      SFX.play("slash"); SFX.play("purify");
+      const m = el["phantom-monster"];
+      m.classList.remove("hit"); void m.offsetWidth; m.classList.add("hit");
+      const stage = el["phantom-stage"];
+      // golden energy slash across the monster
+      const slash = document.createElement("div"); slash.className = "phantom-slash";
+      stage.appendChild(slash); setTimeout(() => slash.remove(), 520);
+      // sparkling purify particle burst
+      const mr = m.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+      const cx = mr.left + mr.width / 2 - sr.left, cy = mr.top + mr.height / 2 - sr.top;
+      for (let i = 0; i < 12; i++) {
+        const sp = document.createElement("div"); sp.className = "purify-spark";
+        sp.style.left = cx + "px"; sp.style.top = cy + "px";
+        const ang = (Math.PI * 2 * i) / 12, dist = 40 + Math.random() * 40;
+        sp.style.setProperty("--sx", Math.cos(ang) * dist + "px");
+        sp.style.setProperty("--sy", Math.sin(ang) * dist + "px");
+        stage.appendChild(sp); setTimeout(() => sp.remove(), 720);
+      }
+      // floating "淨化成功！-20% HP" popup above the monster
+      const pop = document.createElement("div"); pop.className = "float-num plus";
+      pop.style.position = "absolute"; pop.style.left = cx + "px"; pop.style.top = (cy - 30) + "px";
+      pop.style.fontSize = "20px"; pop.style.whiteSpace = "nowrap";
+      pop.textContent = "淨化成功！ -20% HP";
+      stage.appendChild(pop); setTimeout(() => pop.remove(), 1000);
+    }
+
+    // Open the zoomed-in focus scratch card for a spot.
+    function openFocus(spot) {
+      const q = spot.q;
+      spot.startedAt = Date.now();
+      el["scratch-focus"].classList.remove("hidden");
+      el["scratch-word"].textContent = q.word;
+      // show the phantom monster (fog-shrouded) and sync its HP bar with the level monster HP
+      el["phantom-monster"].textContent = currentLevel().monster;
+      renderPhantomHP();
+      el["scratch-actions"].classList.remove("show"); el["scratch-actions"].classList.add("hidden");
+      el["scratch-hint"].style.opacity = "1";
+      const canvas = el["scratch-canvas"], ctx = canvas.getContext("2d");
+      canvas.style.pointerEvents = "auto";
+      ctx.globalCompositeOperation = "source-over";
+      const g = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      g.addColorStop(0, "#0b0f19"); g.addColorStop(.5, "#1f2937"); g.addColorStop(1, "#0b0f19");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "rgba(148,163,184,.4)"; ctx.font = "bold 22px 'Noto Sans HK'";
+      ctx.textAlign = "center"; ctx.fillText("✋ 擦拭黑霧", canvas.width / 2, canvas.height / 2 + 8);
+      ctx.globalCompositeOperation = "destination-out";
+      scratchState = { spot, q, canvas, ctx, drawing: false, revealed: false, buttonsShown: false, attempt: 1 };
+      bindScratchEvents();
+    }
+
+    // Keep/Erase buttons become visible & clickable the instant scratching starts.
+    function showScratchButtons() {
+      const st = scratchState; if (!st || st.buttonsShown) return;
+      st.buttonsShown = true;
+      const actions = el["scratch-actions"];
+      actions.classList.remove("hidden");
+      el["btn-erase"].disabled = false; el["btn-keep"].disabled = false;
+      void actions.offsetWidth; actions.classList.add("show", "reveal-in");
+    }
+    function scratchPoint(e) {
+      const st = scratchState; if (!st || !st.canvas) return;
+      const rect = st.canvas.getBoundingClientRect();
+      const scaleX = st.canvas.width / rect.width, scaleY = st.canvas.height / rect.height;
+      const px = (e.clientX - rect.left) * scaleX, py = (e.clientY - rect.top) * scaleY;
+      st.ctx.beginPath(); st.ctx.arc(px, py, 28, 0, Math.PI * 2); st.ctx.fill();
+      maybeReveal();
+    }
+    function maybeReveal() {
+      const st = scratchState; if (!st || st.revealed) return;
+      const data = st.ctx.getImageData(0, 0, st.canvas.width, st.canvas.height).data;
+      let clear = 0; const step = 40;
+      for (let i = 3; i < data.length; i += 4 * step) { if (data[i] === 0) clear++; }
+      const total = data.length / (4 * step);
+      if (clear / total >= 0.25) { st.revealed = true; revealScratch(); }
+    }
+    function revealScratch() {
+      const st = scratchState; if (!st) return;
+      st.ctx.clearRect(0, 0, st.canvas.width, st.canvas.height);
+      st.canvas.style.pointerEvents = "none";
+      el["scratch-hint"].style.opacity = ".4";
+      showScratchButtons();
+    }
+    function bindScratchEvents() {
+      const st = scratchState, cv = st.canvas;
+      const down = (e) => { if (st.resolving) return; st.drawing = true; showScratchButtons(); scratchPoint(e); };
+      const move = (e) => { if (st.drawing && !st.resolving) { e.preventDefault(); scratchPoint(e); } };
+      const up = () => { st.drawing = false; };
+      cv.onpointerdown = down; cv.onpointermove = move;
+      cv.onpointerup = up; cv.onpointerleave = up;
+    }
+
+    // Keep / Erase decision for the current focus card.
+    function onScratchDecision(choice) {
+      const st = scratchState; if (!st || st.resolving || !st.buttonsShown) return;
+      const q = st.q, spot = st.spot;
+      const chosen = (choice === "keep" ? "保留通過" : "淨化刪除");
+      const rt = Math.min(L4_TOTAL_TIME, +(((Date.now() - spot.startedAt) / 1000)).toFixed(1));
+
+      if (choice === q.correct) {
+        st.resolving = true;
+        el["scratch-actions"].classList.remove("show");
+        // log analytics for this spot (respect first-attempt correctness)
+        const firstOK = (st.attempt === 1);
+        recordL4(q, { First_Attempt_Correct: firstOK, Final_Correct: true, Response_Time_Seconds: rt, Selected_Option: chosen });
+        State.score += firstOK ? SCORE.correctFirst : SCORE.correctRetry;
+        // monster hit: -20% HP + attack/dissolve animation on the phantom
+        damageMonster(MONSTER_DMG_FIRST);
+        phantomAttack();
+        renderPhantomHP();
+        purifySpot(spot, true);
+        toast(firstOK ? "淨化成功！ +" + SCORE.correctFirst : "反擊成功！ +" + SCORE.correctRetry, "ok");
+        updateHUD();
+        setTimeout(closeFocus, 1000);
+      } else {
+        SFX.play("wrong");
+        if (st.attempt === 1) {
+          // wrong first try -> penalty + hint, allow one retry on this same card
+          st.attempt = 2;
+          State.score = Math.max(0, State.score - SCORE.wrongPenalty);
+          State.playerHP = Math.max(0, State.playerHP - SCORE.wrongPenalty);
+          recordL4(q, { First_Attempt_Correct: false, Selected_Option: chosen });
+          playerHurtFX(); toast("答錯了！ -" + SCORE.wrongPenalty, "bad"); updateHUD();
+          showL4Hint(q);
+        } else {
+          // wrong retry -> reveal answer, mark spot finished (not purified-correct)
+          st.resolving = true;
+          el["scratch-actions"].classList.remove("show");
+          recordL4(q, { Final_Correct: false, Response_Time_Seconds: rt, Selected_Option: chosen });
+          const fix = q.fixWord ? "（正字：" + q.fixWord + "）" : "";
+          toast("正解：" + (q.correct === "keep" ? "保留通過" : "淨化刪除") + " " + fix, "bad");
+          purifySpot(spot, false);
+          setTimeout(closeFocus, 1400);
+        }
+      }
+    }
+    function recordL4(q, fields) {
+      AnalyticsManager.startQuestion(q);
+      // merge onto whatever partial row exists for this question this session
+      const existing = L4._rows && L4._rows[q.id];
+      if (existing) { AnalyticsManager.current = existing; }
+      AnalyticsManager.record(fields);
+      if (!L4._rows) L4._rows = {};
+      L4._rows[q.id] = AnalyticsManager.current;
+      // commit only once the spot is finalised (Final_Correct set)
+      if ("Final_Correct" in fields) { State.analytics.push(AnalyticsManager.current); AnalyticsManager.current = null; }
+    }
+    function purifySpot(spot, correct) {
+      spot.done = true;
+      spot.node.classList.add("purified");
+      if (!correct) spot.node.classList.add("wrongdone");
+      L4.cleared++; updateL4Progress();
+      if (correct) { const r = spot.node.getBoundingClientRect(); VFX.floatNum(r.left + r.width/2, r.top, "✔", true); }
+      if (L4.cleared >= L4.total) setTimeout(finishLevel4, 900);
+    }
+    function closeFocus() {
+      el["scratch-focus"].classList.add("hidden");
+      scratchState = null;
+    }
+    // hint modal for a wrong L4 first attempt (reuses the shared modal, returns to the card)
+    function showL4Hint(q) {
+      el["hint-icon"].textContent = "🕯️";
+      el["hint-body"].textContent = q.hint;
+      let c = PENALTY_PAUSE;
+      el["hint-countdown"].textContent = "重試倒數：" + c;
+      el["btn-hint-retry"].disabled = true;
+      el["hint-modal"].classList.add("active");
+      const cd = setInterval(() => {
+        c--;
+        if (c <= 0) { clearInterval(cd); el["hint-countdown"].textContent = "可以重試了！"; el["btn-hint-retry"].disabled = false; }
+        else el["hint-countdown"].textContent = "重試倒數：" + c;
+      }, 1000);
+    }
+    // called by the Keep/Erase decision retry (via hint modal button) and to finish the level
+    function finishLevel4() {
+      if (L4 && L4.timerId) { clearInterval(L4.timerId); L4.timerId = null; }
+      // any spots not attempted at all -> log them as timed-out / incomplete
+      if (L4) {
+        L4.spots.forEach((spot) => {
+          if (!spot.done) {
+            AnalyticsManager.startQuestion(spot.q);
+            AnalyticsManager.record({ First_Attempt_Correct: false, Final_Correct: false, Response_Time_Seconds: L4_TOTAL_TIME, Selected_Option: "(timeout)" });
+            State.analytics.push(AnalyticsManager.current); AnalyticsManager.current = null;
+          }
+        });
+      }
+      endGame();
+    }
+
+    /* ---------- BATTLE RESOLUTION ---------- */
+    function handleCorrect(q, selected, cx, cy) {
+      stopTimer(); const remaining = State.timeLeft, rt = elapsedSeconds();
+      // dramatic hit reaction: hard screen shake + big burst over the monster
+      const gs = el["game-screen"]; gs.classList.remove("shake-hard"); void gs.offsetWidth; gs.classList.add("shake-hard");
+      if (State.attempt === 1) {
+        const isCrit = remaining >= (curTimeLimit() - CRIT_WINDOW);
+        const gain = isCrit ? SCORE.critBonus : SCORE.correctFirst;
+        State.score += gain; damageMonster(MONSTER_DMG_FIRST);
+        AnalyticsManager.record({ First_Attempt_Correct: true, Final_Correct: true, Response_Time_Seconds: rt, Selected_Option: selected });
+        setTimeout(() => VFX.dramaticHit("-" + MONSTER_DMG_FIRST + "% HP", "+" + gain + " SCORE"), 120);
+        if (isCrit) { VFX.critical(); toast("CRITICAL! +" + gain, "ok"); } else toast("正確！ +" + gain, "ok");
+        VFX.floatNum(cx, cy, "+" + gain, true);
+      } else {
+        State.score += SCORE.correctRetry; damageMonster(MONSTER_DMG_RETRY);
+        AnalyticsManager.record({ Final_Correct: true, Response_Time_Seconds: rt, Selected_Option: selected });
+        setTimeout(() => VFX.dramaticHit("-" + MONSTER_DMG_RETRY + "% HP", "+" + SCORE.correctRetry + " SCORE"), 120);
+        toast("反擊成功！ +" + SCORE.correctRetry, "ok");
+        VFX.floatNum(cx, cy, "+" + SCORE.correctRetry, true);
+      }
+      updateHUD(); AnalyticsManager.commit(); setTimeout(nextQuestion, 1200);
+    }
+    function handleWrong(q, selected) {
+      SFX.play("wrong");
+      if (State.attempt === 1) {
+        State.locked = true;
+        State.score = Math.max(0, State.score - SCORE.wrongPenalty);
+        State.playerHP = Math.max(0, State.playerHP - SCORE.wrongPenalty);
+        AnalyticsManager.record({ First_Attempt_Correct: false, Selected_Option: selected });
+        playerHurtFX();
+        const rect = el.playerPortrait.getBoundingClientRect();
+        VFX.floatNum(rect.left + rect.width / 2, rect.top, "-" + SCORE.wrongPenalty, false);
+        toast("答錯了！ -" + SCORE.wrongPenalty, "bad");
+        updateHUD(); pauseTimerFor(PENALTY_PAUSE); showHint(q);
+      } else {
+        State.locked = true; stopTimer(); playerHurtFX();
+        AnalyticsManager.record({ Final_Correct: false, Response_Time_Seconds: elapsedSeconds(), Selected_Option: selected });
+        revealAnswer(q); AnalyticsManager.commit(); setTimeout(nextQuestion, 1800);
+      }
+    }
+    function onTimeout() {
+      const q = currentQuestion();
+      if (State.attempt === 1) {
+        State.playerHP = Math.max(0, State.playerHP - SCORE.wrongPenalty);
+        State.score = Math.max(0, State.score - SCORE.wrongPenalty);
+        AnalyticsManager.record({ First_Attempt_Correct: false, Selected_Option: "(timeout)" });
+        playerHurtFX(); toast("時間到！ -" + SCORE.wrongPenalty, "bad");
+        updateHUD(); showHint(q, true);
+      } else {
+        AnalyticsManager.record({ Final_Correct: false, Response_Time_Seconds: TIME_LIMIT, Selected_Option: "(timeout)" });
+        revealAnswer(q); AnalyticsManager.commit(); setTimeout(nextQuestion, 1800);
+      }
+    }
+    function damageMonster(pct) { State.monsterHP = Math.max(0, State.monsterHP - pct); }
+
+    /* ---------- HINT & RETRY ---------- */
+    function showHint(q, fromTimeout) {
+      const lvl = currentLevel();
+      const icons = { bubble: "📖", dragdrop: "🧩", shield: "🛡️", scratch: "🕯️" };
+      el["hint-icon"].textContent = icons[lvl.type] || "📖";
+      const body = (lvl.type === "bubble")
+        ? (q.phonetic + " 正確答案的部件與字義相關，再想一想！")
+        : q.hint;
+      el["hint-body"].textContent = (fromTimeout ? "時間到！ " : "") + body;
+      let c = PENALTY_PAUSE;
+      el["hint-countdown"].textContent = "重試倒數：" + c;
+      el["btn-hint-retry"].disabled = true;
+      el["hint-modal"].classList.add("active");
+      const cd = setInterval(() => {
+        c--;
+        if (c <= 0) { clearInterval(cd); el["hint-countdown"].textContent = "可以重試了！"; el["btn-hint-retry"].disabled = false; }
+        else el["hint-countdown"].textContent = "重試倒數：" + c;
+      }, 1000);
+    }
+    function startRetry() {
+      el["hint-modal"].classList.remove("active");
+      const lvl = currentLevel();
+      // Level 4 retry: return to the same focus card, keep word revealed, re-enable Keep/Erase
+      if (lvl.type === "scratch") {
+        if (scratchState) { scratchState.resolving = false; scratchState.buttonsShown = true; }
+        el["scratch-actions"].classList.remove("hidden");
+        el["scratch-actions"].classList.add("show");
+        toast("再試一次！", "ok");
+        return;
+      }
+      State.attempt = 2; State.locked = false;
+      const q = currentQuestion();
+      if (lvl.type === "bubble") renderBubbles(q);
+      else if (lvl.type === "dragdrop") renderDragDrop(q);
+      else if (lvl.type === "shield") renderShields(q);
+      startTimer(); toast("再試一次！", "ok");
+    }
+    function revealAnswer(q) {
+      const lvl = currentLevel();
+      if (lvl.type === "bubble") {
+        el["bubble-field"].querySelectorAll(".bubble").forEach((b) => {
+          if (b.dataset.word === q.correct) { b.style.boxShadow = "0 0 30px 8px var(--gold)"; b.style.border = "3px solid var(--gold)"; }
+          else b.style.opacity = ".3";
+        });
+        toast("正確答案：" + q.correct, "bad");
+      } else if (lvl.type === "dragdrop") {
+        const slot = $("active-slot"), opt = q.options.find((o) => o.k === q.correct);
+        if (slot && opt) { slot.textContent = opt.r; slot.classList.add("filled"); slot.style.borderColor = "var(--gold)"; slot.style.boxShadow = "0 0 24px 6px var(--gold)"; }
+        toast("正確答案：" + q.answerWord + " (" + q.correct + ")", "bad");
+      } else if (lvl.type === "shield") {
+        el["shield-options"].querySelectorAll(".shield-opt").forEach((s) => {
+          if (s.dataset.key === q.correct) { s.classList.remove("used"); s.style.borderColor = "var(--gold)"; s.style.boxShadow = "0 0 26px 6px var(--gold)"; }
+          else s.classList.add("used");
+        });
+        toast("正確答案：" + q.answerWord, "bad");
+      } else if (lvl.type === "scratch") {
+        el["scratch-actions"].classList.remove("show");
+        el["scratch-actions"].classList.add("hidden");
+        const correctLabel = q.correct === "keep" ? "保留通過" : "淨化刪除";
+        const fix = q.fixWord ? "（正字：" + q.fixWord + "）" : "";
+        toast("正解：" + correctLabel + " " + fix, "bad");
+      }
+    }
+
+    /* ---------- PROGRESSION ---------- */
+    function nextQuestion() {
+      const lvl = currentLevel();
+      if (State.qIdx < lvl.questions.length - 1) { State.qIdx++; loadQuestion(); }
+      else if (State.levelIdx < LEVELS.length - 1) {
+        State.levelIdx++; State.qIdx = 0; State.monsterHP = 100;
+        updateHUD();
+        // show the next level's how-to modal (timer starts after "開始挑戰")
+        setTimeout(beginLevel, 500);
+      } else endGame();
+    }
+
+    /* ---------- SUMMARY ---------- */
+    function endGame() {
+      stopTimer();
+      SFX.stopBgm(); SFX.play("victory"); // stop spooky loop, play heroic clear fanfare
+      const rows = State.analytics, total = rows.length || 1;
+      const firstCorrect = rows.filter((r) => r.First_Attempt_Correct).length;
+      const finalCorrect = rows.filter((r) => r.Final_Correct).length;
+      const avgTime = rows.reduce((s, r) => s + (Number(r.Response_Time_Seconds) || 0), 0) / total;
+      el["sum-score"].textContent = State.score;
+      el["sum-correct"].textContent = firstCorrect + "/" + total;
+      el["sum-accuracy"].textContent = Math.round((finalCorrect / total) * 100) + "%";
+      el["sum-avgtime"].textContent = avgTime.toFixed(1) + "s";
+      const acc = finalCorrect / total, icon = $("summary-result-icon"), title = $("summary-title");
+      if (State.playerHP <= 0) { icon.textContent = "💀"; title.textContent = "勇者力竭…再接再厲！"; }
+      else if (acc >= 0.9) { icon.textContent = "🏆"; title.textContent = "字靈大師！完美勝利！"; }
+      else if (acc >= 0.6) { icon.textContent = "🎖️"; title.textContent = "冒險成功！繼續努力！"; }
+      else { icon.textContent = "📚"; title.textContent = "冒險完成！多加練習吧！"; }
+      const tb = el["analytics-tbody"]; tb.innerHTML = "";
+      rows.forEach((r) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + r.Level_Number + "</td><td>" + r.Question_ID + "</td>" +
+          '<td class="' + (r.First_Attempt_Correct ? "yes" : "no") + '">' + (r.First_Attempt_Correct ? "✔" : "✗") + "</td>" +
+          '<td class="' + (r.Final_Correct ? "yes" : "no") + '">' + (r.Final_Correct ? "✔" : "✗") + "</td>" +
+          "<td>" + r.Response_Time_Seconds + "</td><td>" + r.Selected_Option + "</td>";
+        tb.appendChild(tr);
+      });
+      showScreen("summary-screen");
+    }
+
+    /* ---------- UTIL ---------- */
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+      return arr;
+    }
+    function genSessionId() {
+      const d = new Date(), pad = (n) => String(n).padStart(2, "0");
+      return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + "-" + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+    }
+
+    /* ---------- HOW-TO-PLAY (pre-level) ---------- */
+    const HOWTO = [
+      {
+        icon: "🗼", badge: "第一關 · 同音怪之塔",
+        subtitle: "Homophone Tower",
+        rules: [
+          '🗡️ <b>劃破含有正確字的氣泡</b>來攻擊同音怪！用滑鼠劃過正確氣泡即可斬破。',
+          '⏱️ 每題限時 <b>30 秒</b>；剩餘 20 秒內答對可獲得 <b>爆擊 +120 分</b>！',
+          '✅ 答對：怪獸 HP −20%，得分 +100。',
+          '❌ 答錯：勇者 −20 分並顯示提示，可 <b>重試一次</b>。'
+        ],
+        start: "開始 Level 1 / 開始挑戰"
+      },
+      {
+        icon: "🏰", badge: "第二關 · 微觀地牢",
+        subtitle: "Micro Dungeon · Radical Assembly",
+        rules: [
+          '🧩 <b>拖拽正確偏旁部首至空缺處</b>，組合成正字攻擊地牢中的怪獸！',
+          '🖐️ 必須 <b>用拖曳方式</b>把部首放進空格 — 直接點按選項無效！',
+          '⏱️ 每題限時 <b>30 秒</b>；20 秒內答對可獲得 <b>爆擊 +120 分</b>。',
+          '✅ 答對：怪獸 HP −20%；答錯可看提示並 <b>重試一次</b>。'
+        ],
+        start: "開始 Level 2 / 開始挑戰"
+      },
+      {
+        icon: "🏰", badge: "第三關 · 雙重幻象城",
+        subtitle: "Double Phantom City",
+        rules: [
+          '⚡ <b>怪獸正在蓄力！</b>從勇者拉一條線連到印有正確字詞的護盾，反彈雷電！',
+          '🖐️ 必須 <b>從勇者拖出連線</b>接到護盾 — 直接點按護盾無效！',
+          '⏱️ 每題限時 <b>30 秒</b>；20 秒內答對可獲得 <b>爆擊 +120 分</b>。',
+          '✅ 答對：怪獸 HP −20%；答錯可看提示並 <b>重試一次</b>。'
+        ],
+        start: "開始 Level 3 / 開始挑戰"
+      },
+      {
+        icon: "🌲", badge: "第四關 · 幻影怪森林",
+        subtitle: "Phantom Monster Forest",
+        rules: [
+          '🔍 森林中同時藏著 <b>5 個黑霧</b>！在場景中尋找並點擊它們。',
+          '🌫️ 點開黑霧後 <b>擦拭揭開詞語</b>：若為 <b>錯別字</b>按「<b>淨化刪除</b>」，<b>正確字詞</b>按「<b>保留通過</b>」！',
+          '⏱️ 全關共 <b>2.5 分鐘（150 秒）</b>倒數，快速清除全部 5 個黑霧即可過關！',
+          '✨ 判斷正確會亮起金色淨化徽章 <b>[ 1/5 已淨化 ]</b>；答錯可看提示並 <b>重試一次</b>。'
+        ],
+        start: "開始 Level 4 / 開始挑戰"
+      }
+    ];
+
+    // Show the how-to modal for a level; the timer/question only starts after "開始挑戰".
+    function showHowTo(levelIdx, onStart) {
+      const info = HOWTO[levelIdx] || HOWTO[0];
+      el["howto-icon"].textContent = info.icon;
+      el["howto-badge"].textContent = info.badge;
+      el["howto-subtitle"].textContent = info.subtitle;
+      el["howto-start-label"].textContent = info.start;
+      el["howto-rules"].innerHTML = info.rules.map((r) => '<li class="flex gap-2"><span>' + r + '</span></li>').join("");
+      // preview the scenery behind the modal
+      applyLevelScenery(LEVELS[levelIdx]);
+      el["howto-modal"].classList.add("active");
+      el["btn-howto-start"].onclick = () => {
+        el["howto-modal"].classList.remove("active");
+        SFX.stopBgm(); SFX.startBgm(false); // spooky gothic loop at calm tempo for this level
+        onStart();
+      };
+    }
+
+    // Begin a level: show how-to first, then load the first question (timer starts on Start click).
+    function beginLevel() {
+      showHowTo(State.levelIdx, () => { loadQuestion(); });
+    }
+
+    /* ---------- CONTROL ---------- */
+    function startGame() {
+      SFX.init(); SFX.resume(); SFX.stopBgm(); // unlock audio on this user gesture
+      State.studentId = (el["student-id"].value.trim() || "Anonymous");
+      State.sessionId = genSessionId();
+      State.levelIdx = 0; State.qIdx = 0; State.score = 0;
+      State.playerHP = PLAYER_MAX_HP; State.monsterHP = 100; State.analytics = [];
+      showScreen("game-screen");
+      updateHUD();
+      beginLevel();
+    }
+    function bindEvents() {
+      el["btn-start"].addEventListener("click", startGame);
+      el["student-id"].addEventListener("keydown", (e) => { if (e.key === "Enter") startGame(); });
+      el["btn-hint-retry"].addEventListener("click", () => { if (!el["btn-hint-retry"].disabled) startRetry(); });
+      el["btn-download-csv"].addEventListener("click", () => AnalyticsManager.download());
+      el["btn-replay"].addEventListener("click", () => { SFX.stopBgm(); showScreen("start-screen"); });
+      el["btn-erase"].addEventListener("click", () => onScratchDecision("erase"));
+      el["btn-keep"].addEventListener("click", () => onScratchDecision("keep"));
+      el["btn-mute"].addEventListener("click", () => {
+        const muted = SFX.toggleMute();
+        el["btn-mute"].classList.toggle("muted", muted);
+        el["btn-mute"].innerHTML = muted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => { cacheDom(); bindEvents(); showScreen("start-screen"); });
+  })();
+  </script>
 </body>
 </html>
