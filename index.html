@@ -2537,9 +2537,12 @@
     }
 
     /* ============================================================
-       Reliable iOS Safari Web Audio "Silent Buffer" Unlocker
+       Universal Web Audio unlocker — covers iOS Safari AND iPadOS
+       Safari in Desktop Mode (which reports pointer/mouse events).
        ============================================================ */
-    function forceUnlockIOSAudio() {
+    const unlockEvents = ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'click'];
+
+    function universalAudioUnlock() {
       // ensure the AudioContext exists and is exposed as window.audioCtx
       SFX.init();
       if (!window.audioCtx) window.audioCtx = SFX.ctx;
@@ -2550,7 +2553,7 @@
         window.audioCtx.resume();
       }
 
-      // 2. Play a 1-sample silent dummy buffer (required by iOS Safari to wake hardware audio output)
+      // 2. Play a 1-sample silent dummy buffer (wakes hardware audio output on iOS/iPadOS)
       try {
         const dummyBuffer = window.audioCtx.createBuffer(1, 1, 22050);
         const dummySource = window.audioCtx.createBufferSource();
@@ -2562,15 +2565,11 @@
       }
 
       // 3. Remove listeners once unlocked
-      ['touchstart', 'touchend', 'click'].forEach(eventType => {
-        document.removeEventListener(eventType, forceUnlockIOSAudio, true);
-      });
+      unlockEvents.forEach(evt => document.removeEventListener(evt, universalAudioUnlock, true));
     }
 
-    // Bind to capture phase for immediate responsiveness
-    ['touchstart', 'touchend', 'click'].forEach(eventType => {
-      document.addEventListener(eventType, forceUnlockIOSAudio, true);
-    });
+    // Bind to capture phase for immediate responsiveness across all input types
+    unlockEvents.forEach(evt => document.addEventListener(evt, universalAudioUnlock, true));
 
     document.addEventListener("DOMContentLoaded", () => { cacheDom(); bindEvents(); showScreen("start-screen"); });
   })();
