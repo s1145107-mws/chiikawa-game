@@ -834,6 +834,9 @@
   </style>
 </head>
 <body class="font-hk">
+  <!-- iOS/iPadOS hardware audio wakeup: tiny inline silent WAV -->
+  <audio id="ios-audio-unlock" playsinline webkit-playsinline preload="auto" src="data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA="></audio>
+
   <div id="app">
 
     <!-- global sound mute toggle -->
@@ -1321,6 +1324,13 @@
         this.bgmBus = this.ctx.createGain(); this.bgmBus.gain.value = 0.32; this.bgmBus.connect(this.master);
       },
       resume() { if (this.ctx && this.ctx.state === "suspended") this.ctx.resume(); },
+      // safe guard used before ANY playback: confirm window.audioCtx exists and resume if suspended.
+      ready() {
+        if (!window.audioCtx && this.ctx) window.audioCtx = this.ctx;
+        if (!window.audioCtx) return false;
+        if (window.audioCtx.state === "suspended") { try { window.audioCtx.resume(); } catch (e) {} }
+        return window.audioCtx.state !== "closed";
+      },
       // low-level tone helper (routes to a bus: sfx or bgm)
       tone(freq, t0, dur, type, peak, endFreq, bus) {
         if (!this.ctx) return;
@@ -1348,7 +1358,8 @@
       },
       /* ---------- action sound effects ---------- */
       play(name) {
-        this.init(); if (!this.ctx) return; this.resume();
+        this.init(); if (!this.ctx) return;
+        if (!this.ready()) return;                 // safely ensure window.audioCtx exists & is resumed
         const t = this.ctx.currentTime;
         switch (name) {
           case "slash": // sword swing slash
@@ -1390,13 +1401,14 @@
       _bass: [110.00, 110.00, 130.81, 87.31],          // A2 A2 C3 F2 — brooding minor movement
       _arp:  [220.00, 261.63, 329.63, 261.63, 220.00, 196.00, 174.61, 196.00], // A3 C4 E4 ... eerie
       startBgm(urgent) {
-        this.init(); if (!this.ctx) return; this.resume();
+        this.init(); if (!this.ctx) return;
+        if (!this.ready()) return;                 // safely ensure window.audioCtx exists & is resumed
         this.playing = true;
         this.setUrgent(!!urgent, true);
         if (this.bgmTimer) return;
         this.bgmStep = 0;
         const tickLoop = () => {
-          if (!this.ctx || !this.playing) return;
+          if (!this.playing || !this.ready()) return; // re-check + resume each loop (iOS can re-suspend)
           const t = this.ctx.currentTime, s = this.bgmStep;
           // low ambient drone (sustained, every 4 steps)
           if (s % 4 === 0) this.tone(55, t, this.bgmInterval / 1000 * 3.6, "sine", 0.16, null, this.bgmBus);
@@ -1420,6 +1432,23 @@
         if (this.bgmTimer && this._loop) { clearInterval(this.bgmTimer); this.bgmTimer = setInterval(this._loop, this.bgmInterval); }
       },
       stopBgm() { this.playing = false; if (this.bgmTimer) { clearInterval(this.bgmTimer); this.bgmTimer = null; } this.urgent = false; this.bgmInterval = 900; },
+      /* Lazy AudioContext init + full iOS/iPadOS hardware wakeup.
+         MUST be called synchronously inside a user gesture (Start / 開始挑戰 clicks). */
+      unlock() {
+        this.init();                                   // lazily create the AudioContext now (inside the gesture)
+        if (this.ctx) { window.audioCtx = this.ctx; if (this.ctx.state === "suspended") this.ctx.resume(); }
+        // play the inline silent WAV <audio> tag to wake the iOS/iPadOS hardware audio session
+        const a = document.getElementById("ios-audio-unlock");
+        if (a) { try { a.play().catch(function(){}); } catch (e) {} }
+        // and schedule a 1-sample silent buffer through the WebAudio graph
+        if (this.ctx) {
+          try {
+            const b = this.ctx.createBuffer(1, 1, 22050);
+            const s = this.ctx.createBufferSource();
+            s.buffer = b; s.connect(this.ctx.destination); s.start(0);
+          } catch (e) {}
+        }
+      },
       toggleMute() {
         this.init(); this.muted = !this.muted;
         if (this.master) this.master.gain.setTargetAtTime(this.muted ? 0 : 0.9, this.ctx.currentTime, 0.02);
@@ -2500,6 +2529,7 @@
       el["howto-modal"].classList.add("active");
       el["btn-howto-start"].onclick = () => {
         el["howto-modal"].classList.remove("active");
+        SFX.unlock();                       // lazy init + hardware wakeup on this modal-start gesture
         SFX.stopBgm(); SFX.startBgm(false); // spooky gothic loop at calm tempo for this level
         onStart();
       };
@@ -2512,7 +2542,7 @@
 
     /* ---------- CONTROL ---------- */
     function startGame() {
-      SFX.init(); SFX.resume(); SFX.stopBgm(); // unlock audio on this user gesture
+      SFX.unlock(); SFX.stopBgm(); // lazy AudioContext init + iOS/iPadOS hardware wakeup on this gesture
       State.studentId = (el["student-id"].value.trim() || "Anonymous");
       State.sessionId = genSessionId();
       State.levelIdx = 0; State.qIdx = 0; State.score = 0;
@@ -2543,28 +2573,9 @@
     const unlockEvents = ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'click'];
 
     function universalAudioUnlock() {
-      // ensure the AudioContext exists and is exposed as window.audioCtx
-      SFX.init();
-      if (!window.audioCtx) window.audioCtx = SFX.ctx;
-      if (!window.audioCtx) return;
-
-      // 1. Force resume context state
-      if (window.audioCtx.state === 'suspended') {
-        window.audioCtx.resume();
-      }
-
-      // 2. Play a 1-sample silent dummy buffer (wakes hardware audio output on iOS/iPadOS)
-      try {
-        const dummyBuffer = window.audioCtx.createBuffer(1, 1, 22050);
-        const dummySource = window.audioCtx.createBufferSource();
-        dummySource.buffer = dummyBuffer;
-        dummySource.connect(window.audioCtx.destination);
-        dummySource.start(0);
-      } catch (e) {
-        console.log('Audio unlock fallback:', e);
-      }
-
-      // 3. Remove listeners once unlocked
+      // lazy AudioContext init + silent <audio> tag + silent buffer hardware wakeup
+      try { SFX.unlock(); } catch (e) { console.log('Audio unlock fallback:', e); }
+      // remove listeners once unlocked
       unlockEvents.forEach(evt => document.removeEventListener(evt, universalAudioUnlock, true));
     }
 
