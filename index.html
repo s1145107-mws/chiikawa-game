@@ -2536,25 +2536,41 @@
       });
     }
 
-    /* ---------- iOS / iPadOS Safari Web Audio unlock ----------
-       Resume the AudioContext on the very first user gesture anywhere on the page.
-       (SFX.ctx is our AudioContext; also exposed as window.audioCtx for reference.) */
-    function unlockWebAudio() {
-      SFX.init();                                  // create the context if it doesn't exist yet
-      window.audioCtx = SFX.ctx;                   // expose for reference/debugging
-      if (SFX.ctx && SFX.ctx.state === "suspended") SFX.ctx.resume();
-      // iOS needs an actual sound scheduled within the gesture to fully unlock playback
-      if (SFX.ctx) {
-        try {
-          const b = SFX.ctx.createBuffer(1, 1, 22050);
-          const s = SFX.ctx.createBufferSource();
-          s.buffer = b; s.connect(SFX.ctx.destination); s.start(0);
-        } catch (e) { /* no-op */ }
+    /* ============================================================
+       Reliable iOS Safari Web Audio "Silent Buffer" Unlocker
+       ============================================================ */
+    function forceUnlockIOSAudio() {
+      // ensure the AudioContext exists and is exposed as window.audioCtx
+      SFX.init();
+      if (!window.audioCtx) window.audioCtx = SFX.ctx;
+      if (!window.audioCtx) return;
+
+      // 1. Force resume context state
+      if (window.audioCtx.state === 'suspended') {
+        window.audioCtx.resume();
       }
+
+      // 2. Play a 1-sample silent dummy buffer (required by iOS Safari to wake hardware audio output)
+      try {
+        const dummyBuffer = window.audioCtx.createBuffer(1, 1, 22050);
+        const dummySource = window.audioCtx.createBufferSource();
+        dummySource.buffer = dummyBuffer;
+        dummySource.connect(window.audioCtx.destination);
+        dummySource.start(0);
+      } catch (e) {
+        console.log('Audio unlock fallback:', e);
+      }
+
+      // 3. Remove listeners once unlocked
+      ['touchstart', 'touchend', 'click'].forEach(eventType => {
+        document.removeEventListener(eventType, forceUnlockIOSAudio, true);
+      });
     }
-    document.addEventListener("touchstart", unlockWebAudio, { once: true });
-    document.addEventListener("click", unlockWebAudio, { once: true });
-    document.addEventListener("keydown", unlockWebAudio, { once: true });
+
+    // Bind to capture phase for immediate responsiveness
+    ['touchstart', 'touchend', 'click'].forEach(eventType => {
+      document.addEventListener(eventType, forceUnlockIOSAudio, true);
+    });
 
     document.addEventListener("DOMContentLoaded", () => { cacheDom(); bindEvents(); showScreen("start-screen"); });
   })();
